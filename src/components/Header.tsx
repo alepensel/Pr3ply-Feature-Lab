@@ -6,7 +6,7 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
-          <img src={preplyLogo} alt="Preply" className="h-8 w-auto" />
+          <img src={preplyLogo} alt="Preply" className="h-10 md:h-12 w-auto" />
         </div>
         
         <nav className="hidden md:flex items-center gap-8">
