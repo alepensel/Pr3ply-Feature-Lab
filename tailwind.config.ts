@@ -57,6 +57,15 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        preply: {
+          pink: "hsl(var(--preply-pink))",
+          "pink-light": "hsl(var(--preply-pink-light))",
+          black: "hsl(var(--preply-black))",
+          gray: "hsl(var(--preply-gray))",
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",
