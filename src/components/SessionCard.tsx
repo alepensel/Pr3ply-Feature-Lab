@@ -1,19 +1,21 @@
 import { Clock, Users, Globe, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { tutor as TutorType } from "@/data/mockData";
 
 interface SessionCardProps {
+  id: string;
   theme: string;
   scenario: string;
   language: string;
   level: string;
   duration: string;
   price: number;
-  tutorName: string;
-  tutorRating: number;
-  tutorImage: string;
+  tutor: typeof TutorType;
   spotsLeft: number;
+  maxSpots: number;
   nextSession: string;
+  description: string;
 }
 
 const SessionCard = ({
@@ -23,11 +25,10 @@ const SessionCard = ({
   level,
   duration,
   price,
-  tutorName,
-  tutorRating,
-  tutorImage,
+  tutor,
   spotsLeft,
   nextSession,
+  description,
 }: SessionCardProps) => {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary hover:shadow-xl">
@@ -37,6 +38,7 @@ const SessionCard = ({
           {theme}
         </Badge>
         <h3 className="text-xl font-bold text-foreground">{scenario}</h3>
+        <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{description}</p>
       </div>
       
       {/* Content */}
@@ -59,15 +61,15 @@ const SessionCard = ({
         {/* Tutor */}
         <div className="mb-4 flex items-center gap-3">
           <img
-            src={tutorImage}
-            alt={tutorName}
+            src={tutor.avatar}
+            alt={tutor.name}
             className="h-10 w-10 rounded-full object-cover"
           />
           <div>
-            <p className="text-sm font-semibold text-foreground">{tutorName}</p>
+            <p className="text-sm font-semibold text-foreground">{tutor.name}</p>
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 fill-primary text-primary" />
-              <span className="text-xs text-muted-foreground">{tutorRating}</span>
+              <span className="text-xs text-muted-foreground">{tutor.rating} ({tutor.reviewCount} reviews)</span>
             </div>
           </div>
         </div>
