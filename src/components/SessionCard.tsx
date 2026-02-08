@@ -1,4 +1,5 @@
 import { Clock, Users, Globe, Star, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { tutor as TutorType } from "@/data/mockData";
@@ -19,6 +20,7 @@ interface SessionCardProps {
 }
 
 const SessionCard = ({
+  id,
   theme,
   scenario,
   language,
@@ -31,7 +33,8 @@ const SessionCard = ({
   description,
 }: SessionCardProps) => {
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary hover:shadow-xl">
+    <Link to={`/session/${id}`} className="block">
+      <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary hover:shadow-xl">
       {/* Header with theme */}
       <div className="bg-preply-pink-light p-6">
         <Badge variant="secondary" className="mb-3 bg-background font-semibold">
@@ -96,6 +99,7 @@ const SessionCard = ({
         </div>
       </div>
     </div>
+  </Link>
   );
 };
 
