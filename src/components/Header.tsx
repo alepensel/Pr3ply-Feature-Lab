@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import preplyLogo from "@/assets/preply-logo.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Calendar } from "lucide-react";
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -35,6 +35,15 @@ const Header = () => {
         <div className="flex items-center gap-3">
           {user ? (
             <>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate("/dashboard")}
+                className="text-sm font-medium gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                <span className="hidden sm:inline">My Sessions</span>
+              </Button>
               <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4" />
                 <span className="max-w-[150px] truncate">{user.email}</span>
