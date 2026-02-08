@@ -1,4 +1,4 @@
-import { Clock, Users, Globe, Star } from "lucide-react";
+import { Clock, Users, Globe, Star, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { tutor as TutorType } from "@/data/mockData";
@@ -89,8 +89,9 @@ const SessionCard = ({
               <span>{spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left</span>
             </div>
           </div>
-          <Button className="bg-foreground text-background hover:bg-foreground/90 rounded-full font-semibold">
-            Book Now
+          <Button className="bg-preply-pink text-foreground hover:bg-preply-pink/90 rounded-full font-semibold gap-2">
+            <Zap className="h-4 w-4 fill-current" />
+            Book lesson
           </Button>
         </div>
       </div>
