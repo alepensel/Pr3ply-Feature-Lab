@@ -169,12 +169,11 @@ const StudentDashboard = () => {
                         View Details
                       </Button>
                       <Button
-                        disabled={!joinable}
                         className="flex-1 bg-preply-pink text-foreground hover:bg-preply-pink/90 gap-1.5"
                         onClick={() => navigate(`/session/${session.id}/room`)}
                       >
                         <Video className="h-4 w-4" />
-                        {joinable ? "Join" : "Join"}
+                        Join
                       </Button>
                     </div>
                   </CardContent>
