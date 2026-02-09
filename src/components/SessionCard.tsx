@@ -16,6 +16,8 @@ interface SessionCardProps {
   spotsLeft: number;
   maxSpots: number;
   nextSession: string;
+  scheduledAt: string;
+  meetLink: string;
   description: string;
 }
 
