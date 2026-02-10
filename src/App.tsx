@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import SessionDetail from "./pages/SessionDetail";
 import SessionRoom from "./pages/SessionRoom";
 import StudentDashboard from "./pages/StudentDashboard";
+import ProfileSettings from "./pages/ProfileSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/session/:id" element={<SessionDetail />} />
             <Route path="/session/:id/room" element={<SessionRoom />} />
             <Route path="/dashboard" element={<StudentDashboard />} />
+            <Route path="/profile" element={<ProfileSettings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

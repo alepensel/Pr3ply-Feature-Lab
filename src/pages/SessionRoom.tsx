@@ -1,10 +1,12 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import { sharedSessions } from "@/data/mockData";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Video, Users, Clock, ArrowLeft, PhoneOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -13,6 +15,7 @@ const JITSI_DOMAIN = "meet.jit.si";
 const SessionRoom = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { profile } = useProfile();
   const navigate = useNavigate();
   const session = sharedSessions.find((s) => s.id === id);
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
@@ -40,7 +43,9 @@ const SessionRoom = () => {
         roomName,
         parentNode: jitsiContainerRef.current,
         userInfo: {
-          displayName: user.email?.split("@")[0] || "Student",
+          displayName: profile?.first_name
+            ? `${profile.first_name} ${profile.last_name || ""}`.trim()
+            : user.email?.split("@")[0] || "Student",
         },
         configOverwrite: {
           startWithAudioMuted: true,
@@ -150,20 +155,40 @@ const SessionRoom = () => {
 
               <div className="p-8 space-y-6">
                 <div className="flex items-center justify-center gap-6 flex-wrap">
+                  {/* Tutor */}
                   <div className="flex flex-col items-center gap-2">
-                    <img src={session.tutor.avatar} alt={session.tutor.name} className="h-16 w-16 rounded-full object-cover border-4 border-primary" />
+                    <Avatar className="h-16 w-16 border-4 border-primary">
+                      <AvatarImage src={session.tutor.avatar} alt={session.tutor.name} className="object-cover" />
+                      <AvatarFallback>{session.tutor.name[0]}</AvatarFallback>
+                    </Avatar>
                     <div className="text-center">
                       <p className="text-sm font-semibold">{session.tutor.name}</p>
                       <Badge variant="outline" className="text-xs">Tutor</Badge>
                     </div>
                   </div>
-                  {Array.from({ length: session.maxSpots - 1 }).map((_, i) => (
+                  {/* Current user (You) */}
+                  <div className="flex flex-col items-center gap-2">
+                    <Avatar className="h-16 w-16 border-4 border-preply-pink">
+                      <AvatarImage src={profile?.avatar_url || undefined} alt="You" className="object-cover" />
+                      <AvatarFallback className="text-lg font-bold bg-secondary text-muted-foreground">
+                        {profile?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-center">
+                      <p className="text-sm font-semibold">
+                        {profile?.first_name ? `${profile.first_name} ${profile.last_name || ""}`.trim() : "You"}
+                      </p>
+                      <Badge variant="outline" className="text-xs bg-preply-pink-light">You</Badge>
+                    </div>
+                  </div>
+                  {/* Other open spots */}
+                  {Array.from({ length: Math.max(0, session.maxSpots - 2) }).map((_, i) => (
                     <div key={i} className="flex flex-col items-center gap-2">
                       <div className="h-16 w-16 rounded-full bg-secondary border-4 border-border flex items-center justify-center">
                         <Users className="h-6 w-6 text-muted-foreground" />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-muted-foreground">Student {i + 1}</p>
+                        <p className="text-sm font-semibold text-muted-foreground">Open spot</p>
                         <Badge variant="outline" className="text-xs">Participant</Badge>
                       </div>
                     </div>

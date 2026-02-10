@@ -44,10 +44,15 @@ const Header = () => {
                 <Calendar className="h-4 w-4" />
                 <span className="hidden sm:inline">My Sessions</span>
               </Button>
-              <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate("/profile")}
+                className="text-sm font-medium gap-2"
+              >
                 <User className="h-4 w-4" />
-                <span className="max-w-[150px] truncate">{user.email}</span>
-              </div>
+                <span className="hidden sm:inline">Profile</span>
+              </Button>
               <Button 
                 variant="ghost" 
                 size="sm"
