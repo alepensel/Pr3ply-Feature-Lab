@@ -6,18 +6,27 @@ import Testimonials from "@/components/Testimonials";
 import HowItWorks from "@/components/HowItWorks";
 import ForTutors from "@/components/ForTutors";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <Hero />
-        <Features />
-        <SessionsGrid />
-        <Testimonials />
-        <HowItWorks />
-        <ForTutors />
+        {user ? (
+          <SessionsGrid />
+        ) : (
+          <>
+            <Hero />
+            <Features />
+            <SessionsGrid />
+            <Testimonials />
+            <HowItWorks />
+            <ForTutors />
+          </>
+        )}
       </main>
       <Footer />
     </div>
