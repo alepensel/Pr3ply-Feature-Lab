@@ -1,66 +1,78 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import preplyLogo from "@/assets/preply-logo.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, User, Calendar } from "lucide-react";
+import { useProfile } from "@/hooks/useProfile";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { LogOut, Bell, Heart, HelpCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const { profile } = useProfile();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
+  const navItems = user
+    ? [
+        { label: "Home", path: "/" },
+        { label: "My Sessions", path: "/dashboard" },
+        { label: "Settings", path: "/profile" },
+      ]
+    : [
+        { label: "Browse Sessions", href: "#sessions" },
+        { label: "How it Works", href: "#how-it-works" },
+        { label: "For Tutors", href: "#tutors" },
+      ];
+
+  const initials = profile?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?";
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <img src={preplyLogo} alt="Preply" className="h-10 md:h-12 w-auto" />
-        </Link>
-        
-        <nav className="hidden md:flex items-center gap-8">
-          <a href="#sessions" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
-            Browse Sessions
-          </a>
-          <a href="#how-it-works" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
-            How it Works
-          </a>
-          <a href="#tutors" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
-            For Tutors
-          </a>
-        </nav>
-        
-        <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
+      {/* Top row: logo + actions */}
+      <div className="container flex h-14 items-center justify-between">
+        <div className="flex items-center gap-6">
+          <Link to="/" className="flex items-center">
+            <img src={preplyLogo} alt="Preply" className="h-8 md:h-10 w-auto" />
+          </Link>
+          {!user && (
+            <span className="hidden md:inline text-sm font-medium text-foreground/70">Find tutors</span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate("/dashboard")}
-                className="text-sm font-medium gap-2"
-              >
-                <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline">My Sessions</span>
+              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
+                <HelpCircle className="h-5 w-5" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
+              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
+                <Heart className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
+                <Bell className="h-5 w-5" />
+              </Button>
+              <button
                 onClick={() => navigate("/profile")}
-                className="text-sm font-medium gap-2"
+                className="ml-1"
               >
-                <User className="h-4 w-4" />
-                <span className="hidden sm:inline">Profile</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
+                <Avatar className="h-8 w-8 border-2 border-border">
+                  <AvatarImage src={profile?.avatar_url || undefined} alt="Profile" className="object-cover" />
+                  <AvatarFallback className="text-xs font-bold bg-secondary text-muted-foreground">{initials}</AvatarFallback>
+                </Avatar>
+              </button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleSignOut}
-                className="text-sm font-medium gap-2"
+                className="text-foreground/70 hover:text-foreground"
               >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Log out</span>
+                <LogOut className="h-5 w-5" />
               </Button>
             </>
           ) : (
@@ -74,6 +86,40 @@ const Header = () => {
             </>
           )}
         </div>
+      </div>
+
+      {/* Bottom row: navigation tabs */}
+      <div className="container">
+        <nav className="flex items-center gap-6 -mb-px overflow-x-auto">
+          {navItems.map((item) => {
+            const isActive = "path" in item && location.pathname === item.path;
+            if ("path" in item) {
+              return (
+                <Link
+                  key={item.label}
+                  to={item.path}
+                  className={cn(
+                    "py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+                    isActive
+                      ? "border-preply-pink text-foreground"
+                      : "border-transparent text-foreground/60 hover:text-foreground hover:border-foreground/20"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            }
+            return (
+              <a
+                key={item.label}
+                href={item.href}
+                className="py-2.5 text-sm font-medium border-b-2 border-transparent text-foreground/60 hover:text-foreground hover:border-foreground/20 transition-colors whitespace-nowrap"
+              >
+                {item.label}
+              </a>
+            );
+          })}
+        </nav>
       </div>
     </header>
   );
