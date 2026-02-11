@@ -54,6 +54,10 @@ const SessionRoom = () => {
           startWithVideoMuted: false,
           prejoinPageEnabled: false,
           disableDeepLinking: true,
+          lobby: { enabled: false },
+          hideLobbyButton: true,
+          requireDisplayName: false,
+          enableLobbyChat: false,
           toolbarButtons: [
             "microphone", "camera", "desktop", "chat",
             "raisehand", "tileview", "hangup",
