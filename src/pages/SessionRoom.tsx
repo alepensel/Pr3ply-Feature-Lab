@@ -135,7 +135,7 @@ const SessionRoom = () => {
                 </Button>
               </div>
             </div>
-            <div ref={jitsiContainerRef} className="flex-1 bg-black" style={{ minHeight: "500px" }} />
+            <div ref={jitsiContainerRef} className="flex-1 bg-black" style={{ minHeight: "calc(100vh - 120px)" }} />
           </div>
         ) : (
           <div className="container py-8 md:py-16 max-w-3xl mx-auto">
