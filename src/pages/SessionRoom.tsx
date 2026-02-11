@@ -42,6 +42,8 @@ const SessionRoom = () => {
       const jitsiApi = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
         roomName,
         parentNode: jitsiContainerRef.current,
+        width: "100%",
+        height: "100%",
         userInfo: {
           displayName: profile?.first_name
             ? `${profile.first_name} ${profile.last_name || ""}`.trim()
@@ -135,7 +137,7 @@ const SessionRoom = () => {
                 </Button>
               </div>
             </div>
-            <div ref={jitsiContainerRef} className="flex-1 bg-black" style={{ minHeight: "calc(100vh - 120px)" }} />
+            <div ref={jitsiContainerRef} className="flex-1 bg-black [&>iframe]:!w-full [&>iframe]:!h-full" style={{ height: "calc(100vh - 120px)" }} />
           </div>
         ) : (
           <div className="container py-8 md:py-16 max-w-3xl mx-auto">
