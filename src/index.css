@@ -17,7 +17,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 7%;
 
-    /* Preply Hot Pink */
+    /* Pr3ply Hot Pink */
     --primary: 330 100% 60%;
     --primary-foreground: 0 0% 100%;
 
@@ -39,7 +39,7 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Custom Preply tokens */
+    /* Custom Pr3ply tokens */
     --preply-pink: 330 100% 60%;
     --preply-pink-light: 330 100% 95%;
     --preply-black: 0 0% 7%;
