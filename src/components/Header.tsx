@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import preplyLogo from "@/assets/preply-logo.png";
+import pr3plyLogo from "@/assets/pr3ply-logo.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -38,7 +38,7 @@ const Header = () => {
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center">
-            <img src={preplyLogo} alt="Preply" className="h-8 md:h-10 w-auto" />
+            <img src={pr3plyLogo} alt="Pr3ply" className="h-12 md:h-14 w-auto" />
           </Link>
           {!user && (
             <span className="hidden md:inline text-sm font-medium text-foreground/70">Find tutors</span>

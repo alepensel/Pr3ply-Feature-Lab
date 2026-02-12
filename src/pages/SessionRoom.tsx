@@ -22,7 +22,7 @@ const SessionRoom = () => {
   const [inCall, setInCall] = useState(false);
   const apiRef = useRef<any>(null);
 
-  const roomName = `preply-shared-${id}`;
+  const roomName = `pr3ply-shared-${id}`;
 
   const endCall = () => {
     if (apiRef.current) {
