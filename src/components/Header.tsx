@@ -36,8 +36,8 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center">
-            <img src={pr3plyLogo} alt="Pr3ply" className="h-12 md:h-14 w-auto" />
+          <Link to="/" className="flex items-center overflow-hidden h-9 md:h-10">
+            <img src={pr3plyLogo} alt="Pr3ply" className="h-20 md:h-24 w-auto object-contain object-top" />
           </Link>
           <nav className="hidden md:flex items-center gap-5">
             {navItems.map((item) => {
