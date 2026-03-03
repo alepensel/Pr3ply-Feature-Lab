@@ -34,15 +34,41 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
-      {/* Top row: logo + actions */}
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center">
             <img src={pr3plyLogo} alt="Pr3ply" className="h-12 md:h-14 w-auto" />
           </Link>
-          {!user && (
-            <span className="hidden md:inline text-sm font-medium text-foreground/70">Find tutors</span>
-          )}
+          <nav className="hidden md:flex items-center gap-5">
+            {navItems.map((item) => {
+              const isActive = "path" in item && location.pathname === item.path;
+              if ("path" in item) {
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.path}
+                    className={cn(
+                      "text-sm font-medium transition-colors whitespace-nowrap",
+                      isActive
+                        ? "text-foreground"
+                        : "text-foreground/60 hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              }
+              return (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors whitespace-nowrap"
+                >
+                  {item.label}
+                </a>
+              );
+            })}
+          </nav>
         </div>
 
         <div className="flex items-center gap-2">
@@ -86,40 +112,6 @@ const Header = () => {
             </>
           )}
         </div>
-      </div>
-
-      {/* Bottom row: navigation tabs */}
-      <div className="container">
-        <nav className="flex items-center gap-6 -mb-px overflow-x-auto">
-          {navItems.map((item) => {
-            const isActive = "path" in item && location.pathname === item.path;
-            if ("path" in item) {
-              return (
-                <Link
-                  key={item.label}
-                  to={item.path}
-                  className={cn(
-                    "py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
-                    isActive
-                      ? "border-preply-pink text-foreground"
-                      : "border-transparent text-foreground/60 hover:text-foreground hover:border-foreground/20"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            }
-            return (
-              <a
-                key={item.label}
-                href={item.href}
-                className="py-2.5 text-sm font-medium border-b-2 border-transparent text-foreground/60 hover:text-foreground hover:border-foreground/20 transition-colors whitespace-nowrap"
-              >
-                {item.label}
-              </a>
-            );
-          })}
-        </nav>
       </div>
     </header>
   );
