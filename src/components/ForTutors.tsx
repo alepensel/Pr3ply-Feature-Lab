@@ -56,13 +56,14 @@ const ForTutors = () => {
           </div>
           
           <div className="relative">
-            <div className="aspect-square rounded-3xl bg-gradient-to-br from-primary/30 to-primary/10 p-8 lg:p-12">
-              <div className="h-full w-full rounded-2xl bg-background/10 backdrop-blur-sm border border-background/20 flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-6xl font-extrabold">2×</p>
-                  <p className="text-xl font-medium mt-2">GMV per hour</p>
-                </div>
-              </div>
+            <div className="aspect-video rounded-3xl overflow-hidden">
+              <iframe
+                src="https://www.youtube.com/embed/px6J0rSMd0U"
+                title="Pr3ply Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
             </div>
           </div>
         </div>
