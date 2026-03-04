@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SessionParticipants from "@/components/SessionParticipants";
 
 const SessionDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -207,6 +208,15 @@ const SessionDetail = () => {
               </div>
               <p className="mt-4 text-muted-foreground">{session.tutor.bio}</p>
             </div>
+
+            {/* Session Participants */}
+            <SessionParticipants
+              sessionId={session.id}
+              maxSpots={session.maxSpots}
+              tutor={{ name: session.tutor.name, avatar: session.tutor.avatar }}
+              currentUserId={user?.id}
+              isBooked={isBooked}
+            />
           </div>
 
           {/* Booking sidebar */}
