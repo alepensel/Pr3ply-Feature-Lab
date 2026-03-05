@@ -68,9 +68,9 @@ const SessionParticipants = ({
   const emptySlots = Math.max(0, maxSpots - filledSlots);
 
   return (
-    <div className="space-y-6">
-      {/* Your tutor section */}
-      <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="rounded-2xl border border-border bg-card p-6 space-y-6">
+      {/* Tutor profile */}
+      <div>
         <h2 className="text-xl font-bold text-foreground mb-4">Your tutor</h2>
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16 border-4 border-primary">
@@ -99,8 +99,11 @@ const SessionParticipants = ({
         <p className="mt-4 text-muted-foreground">{tutor.bio}</p>
       </div>
 
-      {/* Who's joining section */}
-      <div className="rounded-2xl border border-border bg-card p-6">
+      {/* Divider */}
+      <div className="border-t border-border" />
+
+      {/* Who's joining */}
+      <div>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold text-foreground">Who's joining</h2>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
