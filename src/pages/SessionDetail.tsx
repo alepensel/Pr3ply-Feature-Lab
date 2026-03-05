@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Clock, Users, Globe, Star, Zap, ArrowLeft, CheckCircle, Calendar } from "lucide-react";
+import { Clock, Users, Globe, Zap, ArrowLeft, CheckCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { sharedSessions } from "@/data/mockData";
@@ -176,44 +176,19 @@ const SessionDetail = () => {
               </ul>
             </div>
 
-            {/* Tutor info */}
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-xl font-bold text-foreground mb-4">Your tutor</h2>
-              <div className="flex items-center gap-4">
-                <img
-                  src={session.tutor.avatar}
-                  alt={session.tutor.name}
-                  className="h-16 w-16 rounded-full object-cover border-4 border-primary"
-                />
-                <div>
-                  <p className="text-lg font-bold text-foreground">{session.tutor.name}</p>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    From {session.tutor.country} · TEFL Certified
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-primary text-primary" />
-                      <span className="font-semibold">{session.tutor.rating}</span>
-                    </div>
-                    <span className="text-muted-foreground">·</span>
-                    <span className="text-sm text-muted-foreground">
-                      {session.tutor.reviewCount} reviews
-                    </span>
-                    <span className="text-muted-foreground">·</span>
-                    <span className="text-sm text-muted-foreground">
-                      {session.tutor.lessonCount.toLocaleString()} lessons
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <p className="mt-4 text-muted-foreground">{session.tutor.bio}</p>
-            </div>
-
-            {/* Session Participants */}
+            {/* Tutor info + Participants */}
             <SessionParticipants
               sessionId={session.id}
               maxSpots={session.maxSpots}
-              tutor={{ name: session.tutor.name, avatar: session.tutor.avatar }}
+              tutor={{
+                name: session.tutor.name,
+                avatar: session.tutor.avatar,
+                country: session.tutor.country,
+                rating: session.tutor.rating,
+                reviewCount: session.tutor.reviewCount,
+                lessonCount: session.tutor.lessonCount,
+                bio: session.tutor.bio,
+              }}
               currentUserId={user?.id}
               isBooked={isBooked}
             />
