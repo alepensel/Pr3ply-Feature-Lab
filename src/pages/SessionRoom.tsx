@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Video, Users, Clock, ArrowLeft, PhoneOff } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
-const JITSI_DOMAIN = "8x8.vc";
+const JITSI_DOMAIN = "meet.jit.si";
 
 const SessionRoom = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,94 +18,42 @@ const SessionRoom = () => {
   const { profile } = useProfile();
   const navigate = useNavigate();
   const session = sharedSessions.find((s) => s.id === id);
-  const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const [inCall, setInCall] = useState(false);
-  const apiRef = useRef<any>(null);
 
-  const roomName = `pr3ply-shared-${id}`;
+  const roomName = `Pr3plyShared${id}`;
+
+  const displayName = useMemo(() => {
+    if (profile?.first_name) {
+      return `${profile.first_name} ${profile.last_name || ""}`.trim();
+    }
+    return user?.email?.split("@")[0] || "Student";
+  }, [profile, user]);
+
+  const jitsiUrl = useMemo(() => {
+    const config = [
+      "config.prejoinConfig.enabled=false",
+      "config.prejoinPageEnabled=false",
+      "config.startWithAudioMuted=true",
+      "config.startWithVideoMuted=false",
+      "config.disableDeepLinking=true",
+      "config.hideConferenceSubject=true",
+      "config.hideConferenceTimer=true",
+      "config.enableInsecureRoomNameWarning=false",
+      "config.toolbarButtons=%5B%22microphone%22%2C%22camera%22%2C%22desktop%22%2C%22chat%22%2C%22raisehand%22%2C%22tileview%22%2C%22hangup%22%5D",
+      "interfaceConfig.SHOW_JITSI_WATERMARK=false",
+      "interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false",
+      "interfaceConfig.TOOLBAR_ALWAYS_VISIBLE=true",
+      "interfaceConfig.DISABLE_JOIN_LEAVE_NOTIFICATIONS=true",
+      "interfaceConfig.MOBILE_APP_PROMO=false",
+      `userInfo.displayName=${encodeURIComponent(displayName)}`,
+    ].join("&");
+
+    return `https://${JITSI_DOMAIN}/${roomName}#${config}`;
+  }, [roomName, displayName]);
 
   const endCall = () => {
-    if (apiRef.current) {
-      apiRef.current.dispose();
-      apiRef.current = null;
-    }
     setInCall(false);
   };
-
-  useEffect(() => {
-    if (!inCall || !jitsiContainerRef.current || !user) return;
-
-    const initJitsi = () => {
-      if (!jitsiContainerRef.current) return;
-
-      const displayName = profile?.first_name
-        ? `${profile.first_name} ${profile.last_name || ""}`.trim()
-        : user.email?.split("@")[0] || "Student";
-
-      // @ts-ignore
-      const jitsiApi = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
-        roomName,
-        parentNode: jitsiContainerRef.current,
-        width: "100%",
-        height: "100%",
-        userInfo: { displayName },
-        configOverwrite: {
-          startWithAudioMuted: true,
-          startWithVideoMuted: false,
-          prejoinConfig: { enabled: false },
-          prejoinPageEnabled: false,
-          disableDeepLinking: true,
-          lobbyModeEnabled: false,
-          'security.lobby.enabled': false,
-          enableLobbyChat: false,
-          hideLobbyButton: true,
-          disableModeratorIndicator: false,
-          enableInsecureRoomNameWarning: false,
-          hideConferenceSubject: true,
-          hideConferenceTimer: true,
-          disableProfile: true,
-          toolbarButtons: [
-            "microphone", "camera", "desktop", "chat",
-            "raisehand", "tileview", "hangup",
-          ],
-        },
-        interfaceConfigOverwrite: {
-          SHOW_JITSI_WATERMARK: false,
-          SHOW_WATERMARK_FOR_GUESTS: false,
-          TOOLBAR_ALWAYS_VISIBLE: true,
-          DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
-          FILM_STRIP_MAX_HEIGHT: 120,
-          MOBILE_APP_PROMO: false,
-          HIDE_INVITE_MORE_HEADER: true,
-        },
-      });
-
-      jitsiApi.addListener("readyToClose", () => {
-        endCall();
-      });
-
-      apiRef.current = jitsiApi;
-    };
-
-    // @ts-ignore
-    if (window.JitsiMeetExternalAPI) {
-      initJitsi();
-    } else {
-      const script = document.createElement("script");
-      script.src = `https://${JITSI_DOMAIN}/external_api.js`;
-      script.async = true;
-      script.onload = initJitsi;
-      document.head.appendChild(script);
-    }
-
-    return () => {
-      if (apiRef.current) {
-        apiRef.current.dispose();
-        apiRef.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inCall]);
 
   if (!session) {
     return (
@@ -152,7 +100,12 @@ const SessionRoom = () => {
               </div>
             </div>
             <div className="relative flex-1" style={{ minHeight: 0 }}>
-              <div ref={jitsiContainerRef} className="absolute inset-0 bg-black [&>iframe]:!w-full [&>iframe]:!h-full [&>iframe]:!border-0" />
+              <iframe
+                src={jitsiUrl}
+                allow="camera;microphone;fullscreen;display-capture;autoplay"
+                className="absolute inset-0 w-full h-full border-0"
+                title="Video session"
+              />
             </div>
           </div>
         ) : (
