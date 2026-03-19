@@ -151,7 +151,9 @@ const SessionRoom = () => {
                 </Button>
               </div>
             </div>
-            <div ref={jitsiContainerRef} className="flex-1 bg-black [&>iframe]:!w-full [&>iframe]:!h-full [&>iframe]:!border-0" style={{ minHeight: 0, height: "calc(100vh - 56px - 52px)" }} />
+            <div className="relative flex-1" style={{ minHeight: 0 }}>
+              <div ref={jitsiContainerRef} className="absolute inset-0 bg-black [&>iframe]:!w-full [&>iframe]:!h-full [&>iframe]:!border-0" />
+            </div>
           </div>
         ) : (
           <div className="container py-8 md:py-16 max-w-3xl mx-auto">
