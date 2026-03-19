@@ -10,7 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Video, Users, Clock, ArrowLeft, PhoneOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-const JITSI_DOMAIN = "meet.jit.si";
+const JITSI_DOMAIN = "8x8.vc";
 
 const SessionRoom = () => {
   const { id } = useParams<{ id: string }>();
