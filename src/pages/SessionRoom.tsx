@@ -10,7 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Video, Users, Clock, ArrowLeft, PhoneOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-const JITSI_DOMAIN = "meet.jit.si";
+const JITSI_DOMAIN = "8x8.vc";
 
 const SessionRoom = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,23 +38,24 @@ const SessionRoom = () => {
     const initJitsi = () => {
       if (!jitsiContainerRef.current) return;
 
+      const displayName = profile?.first_name
+        ? `${profile.first_name} ${profile.last_name || ""}`.trim()
+        : user.email?.split("@")[0] || "Student";
+
       // @ts-ignore
       const jitsiApi = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
         roomName,
         parentNode: jitsiContainerRef.current,
         width: "100%",
         height: "100%",
-        userInfo: {
-          displayName: profile?.first_name
-            ? `${profile.first_name} ${profile.last_name || ""}`.trim()
-            : user.email?.split("@")[0] || "Student",
-        },
+        userInfo: { displayName },
         configOverwrite: {
           startWithAudioMuted: true,
           startWithVideoMuted: false,
           prejoinConfig: { enabled: false },
           prejoinPageEnabled: false,
           disableDeepLinking: true,
+          lobbyModeEnabled: false,
           'security.lobby.enabled': false,
           enableLobbyChat: false,
           hideLobbyButton: true,
@@ -62,6 +63,7 @@ const SessionRoom = () => {
           enableInsecureRoomNameWarning: false,
           hideConferenceSubject: true,
           hideConferenceTimer: true,
+          disableProfile: true,
           toolbarButtons: [
             "microphone", "camera", "desktop", "chat",
             "raisehand", "tileview", "hangup",
@@ -73,6 +75,8 @@ const SessionRoom = () => {
           TOOLBAR_ALWAYS_VISIBLE: true,
           DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
           FILM_STRIP_MAX_HEIGHT: 120,
+          MOBILE_APP_PROMO: false,
+          HIDE_INVITE_MORE_HEADER: true,
         },
       });
 
@@ -124,11 +128,11 @@ const SessionRoom = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <Header />
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col min-h-0">
         {inCall ? (
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
             <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Badge variant="secondary" className="font-semibold">
@@ -147,7 +151,9 @@ const SessionRoom = () => {
                 </Button>
               </div>
             </div>
-            <div ref={jitsiContainerRef} className="flex-1 bg-black [&>iframe]:!w-full [&>iframe]:!h-full [&>iframe]:!border-0" style={{ minHeight: 0, height: "calc(100vh - 56px - 52px)" }} />
+            <div className="relative flex-1" style={{ minHeight: 0 }}>
+              <div ref={jitsiContainerRef} className="absolute inset-0 bg-black [&>iframe]:!w-full [&>iframe]:!h-full [&>iframe]:!border-0" />
+            </div>
           </div>
         ) : (
           <div className="container py-8 md:py-16 max-w-3xl mx-auto">
