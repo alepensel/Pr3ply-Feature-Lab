@@ -52,6 +52,7 @@ const SessionRoom = () => {
         configOverwrite: {
           startWithAudioMuted: true,
           startWithVideoMuted: false,
+          prejoinConfig: { enabled: false },
           prejoinPageEnabled: false,
           disableDeepLinking: true,
           'security.lobby.enabled': false,
@@ -59,6 +60,8 @@ const SessionRoom = () => {
           hideLobbyButton: true,
           disableModeratorIndicator: false,
           enableInsecureRoomNameWarning: false,
+          hideConferenceSubject: true,
+          hideConferenceTimer: true,
           toolbarButtons: [
             "microphone", "camera", "desktop", "chat",
             "raisehand", "tileview", "hangup",
@@ -68,6 +71,8 @@ const SessionRoom = () => {
           SHOW_JITSI_WATERMARK: false,
           SHOW_WATERMARK_FOR_GUESTS: false,
           TOOLBAR_ALWAYS_VISIBLE: true,
+          DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+          FILM_STRIP_MAX_HEIGHT: 120,
         },
       });
 
@@ -142,7 +147,7 @@ const SessionRoom = () => {
                 </Button>
               </div>
             </div>
-            <div ref={jitsiContainerRef} className="flex-1 bg-black [&>iframe]:!w-full [&>iframe]:!h-full" style={{ height: "calc(100vh - 120px)" }} />
+            <div ref={jitsiContainerRef} className="flex-1 bg-black [&>iframe]:!w-full [&>iframe]:!h-full [&>iframe]:!border-0" style={{ minHeight: 0, height: "calc(100vh - 56px - 52px)" }} />
           </div>
         ) : (
           <div className="container py-8 md:py-16 max-w-3xl mx-auto">
