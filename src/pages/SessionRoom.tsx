@@ -38,23 +38,24 @@ const SessionRoom = () => {
     const initJitsi = () => {
       if (!jitsiContainerRef.current) return;
 
+      const displayName = profile?.first_name
+        ? `${profile.first_name} ${profile.last_name || ""}`.trim()
+        : user.email?.split("@")[0] || "Student";
+
       // @ts-ignore
       const jitsiApi = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
         roomName,
         parentNode: jitsiContainerRef.current,
         width: "100%",
         height: "100%",
-        userInfo: {
-          displayName: profile?.first_name
-            ? `${profile.first_name} ${profile.last_name || ""}`.trim()
-            : user.email?.split("@")[0] || "Student",
-        },
+        userInfo: { displayName },
         configOverwrite: {
           startWithAudioMuted: true,
           startWithVideoMuted: false,
           prejoinConfig: { enabled: false },
           prejoinPageEnabled: false,
           disableDeepLinking: true,
+          lobbyModeEnabled: false,
           'security.lobby.enabled': false,
           enableLobbyChat: false,
           hideLobbyButton: true,
@@ -62,6 +63,7 @@ const SessionRoom = () => {
           enableInsecureRoomNameWarning: false,
           hideConferenceSubject: true,
           hideConferenceTimer: true,
+          disableProfile: true,
           toolbarButtons: [
             "microphone", "camera", "desktop", "chat",
             "raisehand", "tileview", "hangup",
@@ -73,6 +75,8 @@ const SessionRoom = () => {
           TOOLBAR_ALWAYS_VISIBLE: true,
           DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
           FILM_STRIP_MAX_HEIGHT: 120,
+          MOBILE_APP_PROMO: false,
+          HIDE_INVITE_MORE_HEADER: true,
         },
       });
 
