@@ -1,7 +1,8 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Clock, Users, Globe, Zap, ArrowLeft, CheckCircle, Calendar } from "lucide-react";
+import { Clock, Users, Globe, Zap, ArrowLeft, CheckCircle, Calendar, Star, Crown, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { sharedSessions } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,12 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import SessionParticipants from "@/components/SessionParticipants";
+
+interface Participant {
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+}
 
 const SessionDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +24,7 @@ const SessionDetail = () => {
   const [isBooked, setIsBooked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [checkingBooking, setCheckingBooking] = useState(true);
+  const [participants, setParticipants] = useState<Participant[]>([]);
 
   const session = sharedSessions.find((s) => s.id === id);
 
@@ -27,20 +34,39 @@ const SessionDetail = () => {
         setCheckingBooking(false);
         return;
       }
-
       const { data } = await supabase
         .from("bookings")
         .select("id")
         .eq("user_id", user.id)
         .eq("session_id", session.id)
         .maybeSingle();
-
       setIsBooked(!!data);
       setCheckingBooking(false);
     };
-
     checkExistingBooking();
   }, [user, session]);
+
+  useEffect(() => {
+    const fetchParticipants = async () => {
+      if (!session) return;
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("user_id")
+        .eq("session_id", session.id)
+        .eq("status", "confirmed");
+      if (!bookings || bookings.length === 0) {
+        setParticipants([]);
+        return;
+      }
+      const userIds = bookings.map((b) => b.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, avatar_url")
+        .in("user_id", userIds);
+      setParticipants(profiles || []);
+    };
+    fetchParticipants();
+  }, [session, isBooked]);
 
   if (!session) {
     return (
@@ -62,16 +88,12 @@ const SessionDetail = () => {
       navigate("/auth", { state: { returnTo: `/session/${session.id}` } });
       return;
     }
-
     setIsLoading(true);
-
     const { error } = await supabase.from("bookings").insert({
       user_id: user.id,
       session_id: session.id,
     });
-
     setIsLoading(false);
-
     if (error) {
       if (error.code === "23505") {
         toast.error("You've already booked this session");
@@ -81,161 +103,112 @@ const SessionDetail = () => {
       }
       return;
     }
-
     setIsBooked(true);
     toast.success("Session booked successfully!");
   };
 
   const handleCancelBooking = async () => {
     if (!user) return;
-
     setIsLoading(true);
-
     const { error } = await supabase
       .from("bookings")
       .delete()
       .eq("user_id", user.id)
       .eq("session_id", session.id);
-
     setIsLoading(false);
-
     if (error) {
       toast.error("Failed to cancel booking. Please try again.");
       return;
     }
-
     setIsBooked(false);
     toast.success("Booking cancelled");
   };
 
+  const filledSlots = participants.length;
+  const emptySlots = Math.max(0, session.maxSpots - filledSlots);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="container py-8 md:py-16">
-        {/* Back button */}
+      <main className="container py-4 flex-1">
+        {/* Back button - compact */}
         <Button
           variant="ghost"
           asChild
-          className="mb-6 gap-2 text-muted-foreground hover:text-foreground"
+          size="sm"
+          className="mb-3 gap-1.5 text-muted-foreground hover:text-foreground text-xs"
         >
           <Link to="/#sessions">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3 w-3" />
             Back to sessions
           </Link>
         </Button>
 
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Main content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Header */}
-            <div className="rounded-2xl bg-preply-pink-light p-8">
-              <Badge variant="secondary" className="mb-4 bg-background font-semibold">
+        {/* Row 1: Session header + Booking sidebar */}
+        <div className="grid gap-4 lg:grid-cols-3 mb-4">
+          {/* Session header */}
+          <div className="lg:col-span-2 rounded-xl bg-preply-pink-light p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="secondary" className="bg-background font-semibold text-xs">
                 {session.theme}
               </Badge>
-              <h1 className="text-3xl font-extrabold text-foreground md:text-4xl">
-                {session.scenario}
-              </h1>
-              <p className="mt-4 text-lg text-muted-foreground">{session.description}</p>
-
-              {/* Meta info */}
-              <div className="mt-6 flex flex-wrap gap-4">
-                <div className="flex items-center gap-2 text-foreground">
-                  <Globe className="h-5 w-5" />
-                  <span className="font-medium">{session.language}</span>
-                </div>
-                <div className="flex items-center gap-2 text-foreground">
-                  <Clock className="h-5 w-5" />
-                  <span className="font-medium">{session.duration}</span>
-                </div>
-                <Badge variant="outline" className="font-semibold text-base px-3 py-1">
-                  {session.level}
-                </Badge>
+              <Badge variant="outline" className="font-semibold text-xs px-2 py-0.5">
+                {session.level}
+              </Badge>
+            </div>
+            <h1 className="text-xl font-extrabold text-foreground lg:text-2xl">
+              {session.scenario}
+            </h1>
+            <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">{session.description}</p>
+            <div className="mt-3 flex flex-wrap gap-3 text-sm">
+              <div className="flex items-center gap-1.5 text-foreground">
+                <Globe className="h-4 w-4" />
+                <span className="font-medium">{session.language}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-foreground">
+                <Clock className="h-4 w-4" />
+                <span className="font-medium">{session.duration}</span>
               </div>
             </div>
-
-            {/* What you'll practice */}
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-xl font-bold text-foreground mb-4">What you'll practice</h2>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
-                  <span className="text-muted-foreground">Real-world vocabulary and expressions</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
-                  <span className="text-muted-foreground">Natural conversation flow and turn-taking</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
-                  <span className="text-muted-foreground">Listening comprehension with native-like speech</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
-                  <span className="text-muted-foreground">Confidence building in a supportive group setting</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Tutor info + Participants */}
-            <SessionParticipants
-              sessionId={session.id}
-              maxSpots={session.maxSpots}
-              tutor={{
-                name: session.tutor.name,
-                avatar: session.tutor.avatar,
-                country: session.tutor.country,
-                rating: session.tutor.rating,
-                reviewCount: session.tutor.reviewCount,
-                lessonCount: session.tutor.lessonCount,
-                bio: session.tutor.bio,
-              }}
-              currentUserId={user?.id}
-              isBooked={isBooked}
-            />
           </div>
 
-          {/* Booking sidebar */}
+          {/* Booking sidebar - compact */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 rounded-2xl border border-border bg-card p-6 shadow-lg">
-              {/* Price */}
-              <div className="text-center mb-6">
-                <p className="text-4xl font-extrabold text-foreground">${session.price}</p>
-                <p className="text-sm text-muted-foreground">per seat</p>
-              </div>
-
-              {/* Next session */}
-              <div className="rounded-lg bg-secondary p-4 mb-6">
-                <div className="flex items-center gap-2 mb-1">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Next session</p>
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm h-full flex flex-col justify-between">
+              <div>
+                <div className="flex items-baseline justify-center gap-1 mb-3">
+                  <span className="text-3xl font-extrabold text-foreground">${session.price}</span>
+                  <span className="text-xs text-muted-foreground">/ seat</span>
                 </div>
-                <p className="text-lg font-bold text-foreground">{session.nextSession}</p>
+                <div className="rounded-lg bg-secondary p-2.5 mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Next session</span>
+                  </div>
+                  <p className="text-sm font-bold text-foreground mt-0.5">{session.nextSession}</p>
+                </div>
+                <div className="flex items-center justify-center gap-1.5 mb-3 text-xs text-muted-foreground">
+                  <Users className="h-3.5 w-3.5" />
+                  <span>{session.spotsLeft} of {session.maxSpots} spots left</span>
+                </div>
               </div>
 
-              {/* Spots left */}
-              <div className="flex items-center justify-center gap-2 mb-6 text-muted-foreground">
-                <Users className="h-4 w-4" />
-                <span>
-                  {session.spotsLeft} of {session.maxSpots} student spots left
-                </span>
-              </div>
-
-              {/* Book button */}
               {checkingBooking ? (
-                <Button disabled className="w-full rounded-full py-6 text-lg font-semibold">
+                <Button disabled className="w-full rounded-full py-2 text-sm font-semibold">
                   Loading...
                 </Button>
               ) : isBooked ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-center gap-2 text-primary font-semibold">
-                    <CheckCircle className="h-5 w-5" />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center gap-1.5 text-primary font-semibold text-sm">
+                    <CheckCircle className="h-4 w-4" />
                     <span>You're booked!</span>
                   </div>
                   <Button
                     variant="outline"
                     onClick={handleCancelBooking}
                     disabled={isLoading}
-                    className="w-full rounded-full"
+                    className="w-full rounded-full text-xs"
+                    size="sm"
                   >
                     {isLoading ? "Cancelling..." : "Cancel booking"}
                   </Button>
@@ -244,25 +217,142 @@ const SessionDetail = () => {
                 <Button
                   onClick={handleBookSession}
                   disabled={isLoading || session.spotsLeft === 0}
-                  className="w-full bg-preply-pink text-foreground hover:bg-preply-pink/90 rounded-full py-6 text-lg font-semibold gap-2"
+                  className="w-full bg-preply-pink text-foreground hover:bg-preply-pink/90 rounded-full py-2 text-sm font-semibold gap-1.5"
                 >
-                  {isLoading ? (
-                    "Booking..."
-                  ) : (
+                  {isLoading ? "Booking..." : (
                     <>
-                      <Zap className="h-5 w-5 fill-current" />
+                      <Zap className="h-4 w-4 fill-current" />
                       Book lesson
                     </>
                   )}
                 </Button>
               )}
-
               {!user && !checkingBooking && (
-                <p className="text-center text-sm text-muted-foreground mt-4">
-                  You'll need to sign in to book this session
+                <p className="text-center text-xs text-muted-foreground mt-2">
+                  Sign in to book this session
                 </p>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Row 2: What you'll practice (horizontal) */}
+        <div className="rounded-xl border border-border bg-card p-4 mb-4">
+          <h2 className="text-sm font-bold text-foreground mb-2">What you'll practice</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            {[
+              "Real-world vocabulary and expressions",
+              "Natural conversation flow and turn-taking",
+              "Listening comprehension with native-like speech",
+              "Confidence building in a supportive group",
+            ].map((item) => (
+              <div key={item} className="flex items-start gap-1.5">
+                <CheckCircle className="h-3.5 w-3.5 text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs text-muted-foreground">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Row 3: Tutor (left) + Who's joining (right) */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          {/* Your tutor */}
+          <div className="rounded-xl border border-border bg-card p-4">
+            <h2 className="text-sm font-bold text-foreground mb-3">Your tutor</h2>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12 border-2 border-primary">
+                <AvatarImage src={session.tutor.avatar} alt={session.tutor.name} className="object-cover" />
+                <AvatarFallback className="text-sm font-bold bg-primary text-primary-foreground">
+                  {session.tutor.name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-foreground">{session.tutor.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {session.tutor.country} · TEFL Certified
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <Star className="h-3 w-3 fill-primary text-primary" />
+                  <span className="text-xs font-semibold">{session.tutor.rating}</span>
+                  <span className="text-xs text-muted-foreground">· {session.tutor.reviewCount} reviews · {session.tutor.lessonCount.toLocaleString()} lessons</span>
+                </div>
+              </div>
+            </div>
+            <p className="mt-2.5 text-xs text-muted-foreground line-clamp-3">{session.tutor.bio}</p>
+          </div>
+
+          {/* Who's joining */}
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold text-foreground">Who's joining</h2>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Users className="h-3.5 w-3.5" />
+                <span>{filledSlots}/{session.maxSpots} students</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {/* Tutor slot */}
+              <div className="flex items-center gap-2.5 rounded-lg bg-accent/50 p-2.5">
+                <Avatar className="h-8 w-8 border-2 border-primary">
+                  <AvatarImage src={session.tutor.avatar} alt={session.tutor.name} className="object-cover" />
+                  <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
+                    {session.tutor.name[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-foreground truncate">{session.tutor.name}</p>
+                  <p className="text-[10px] text-muted-foreground">Tutor</p>
+                </div>
+                <Crown className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+              </div>
+
+              {/* Filled student slots */}
+              {participants.map((p) => {
+                const isYou = p.user_id === user?.id;
+                const name = p.display_name || "Student";
+                return (
+                  <div key={p.user_id} className="flex items-center gap-2.5 rounded-lg bg-secondary/50 p-2.5">
+                    <Avatar className="h-8 w-8 border-2 border-border">
+                      <AvatarImage src={p.avatar_url || undefined} alt={name} className="object-cover" />
+                      <AvatarFallback className="text-xs font-bold bg-secondary text-muted-foreground">
+                        {name[0]?.toUpperCase() || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground truncate">
+                        {name}
+                        {isYou && <span className="ml-1 text-[10px] font-medium text-primary">(You)</span>}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">Student</p>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Empty slots */}
+              {Array.from({ length: emptySlots }).map((_, i) => (
+                <div key={`empty-${i}`} className="flex items-center gap-2.5 rounded-lg border-2 border-dashed border-border p-2.5">
+                  <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
+                    <UserPlus className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-muted-foreground">Open spot</p>
+                    <p className="text-[10px] text-muted-foreground/60">Waiting for a student</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {filledSlots > 0 && emptySlots > 0 && !isBooked && (
+              <div className="mt-2.5 rounded-lg bg-accent p-2 text-center">
+                <p className="text-xs font-medium text-accent-foreground">
+                  {filledSlots === 1
+                    ? "1 student has already joined — book your spot!"
+                    : `${filledSlots} students have already joined — book your spot!`}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </main>
