@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, Bell, Heart, HelpCircle } from "lucide-react";
+import { LogOut, Bell, Heart, CalendarCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Header = () => {
