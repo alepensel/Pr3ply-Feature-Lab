@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, Bell, Heart, HelpCircle } from "lucide-react";
+import { LogOut, Bell, Heart, CalendarCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Header = () => {
@@ -74,8 +74,8 @@ const Header = () => {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
-                <HelpCircle className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground" onClick={() => navigate("/dashboard")}>
+                <CalendarCheck className="h-5 w-5" />
               </Button>
               <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
                 <Heart className="h-5 w-5" />
