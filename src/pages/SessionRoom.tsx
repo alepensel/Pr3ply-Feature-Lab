@@ -76,9 +76,9 @@ const SessionRoom = () => {
   }
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className={cn("bg-background flex flex-col", inCall ? "h-screen overflow-hidden" : "min-h-screen")}>
       <Header />
-      <main className="flex-1 flex flex-col min-h-0">
+      <main className={cn("flex-1 flex flex-col", inCall ? "min-h-0" : "")}>
         {inCall ? (
           <div className="flex-1 flex flex-col min-h-0">
             <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between">
