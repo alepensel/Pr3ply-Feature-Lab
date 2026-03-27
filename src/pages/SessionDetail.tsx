@@ -62,7 +62,7 @@ const SessionDetail = () => {
       const userIds = bookings.map((b) => b.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, avatar_url")
+        .select("user_id, display_name, avatar_url, country")
         .in("user_id", userIds);
       setParticipants(profiles || []);
     };
