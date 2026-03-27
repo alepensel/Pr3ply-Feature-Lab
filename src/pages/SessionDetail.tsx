@@ -295,6 +295,12 @@ const SessionDetail = () => {
                 )}
               </div>
             </div>
+
+            {/* Participant Map */}
+            <ParticipantMap
+              tutorCountry={session.tutor.country}
+              participantCountries={participants.map((p) => p.country)}
+            />
           </div>
 
           {/* RIGHT: Booking sidebar */}
