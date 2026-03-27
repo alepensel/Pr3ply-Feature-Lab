@@ -40,9 +40,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          about_me: string | null
           avatar_url: string | null
+          country: string | null
           created_at: string
           display_name: string | null
+          english_level: string | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -50,9 +53,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          about_me?: string | null
           avatar_url?: string | null
+          country?: string | null
           created_at?: string
           display_name?: string | null
+          english_level?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
@@ -60,9 +66,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          about_me?: string | null
           avatar_url?: string | null
+          country?: string | null
           created_at?: string
           display_name?: string | null
+          english_level?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
