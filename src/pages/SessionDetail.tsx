@@ -1,4 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
+import ParticipantMap from "@/components/ParticipantMap";
 import { Clock, Users, Globe, Zap, ArrowLeft, CheckCircle, Calendar, Star, Crown, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
