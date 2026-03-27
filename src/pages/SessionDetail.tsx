@@ -1,4 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
+import ParticipantMap from "@/components/ParticipantMap";
 import { Clock, Users, Globe, Zap, ArrowLeft, CheckCircle, Calendar, Star, Crown, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,7 @@ interface Participant {
   user_id: string;
   display_name: string | null;
   avatar_url: string | null;
+  country: string | null;
 }
 
 const SessionDetail = () => {
@@ -61,7 +63,7 @@ const SessionDetail = () => {
       const userIds = bookings.map((b) => b.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, avatar_url")
+        .select("user_id, display_name, avatar_url, country")
         .in("user_id", userIds);
       setParticipants(profiles || []);
     };
@@ -293,6 +295,12 @@ const SessionDetail = () => {
                 )}
               </div>
             </div>
+
+            {/* Participant Map */}
+            <ParticipantMap
+              tutorCountry={session.tutor.country}
+              participantCountries={participants.map((p) => p.country)}
+            />
           </div>
 
           {/* RIGHT: Booking sidebar */}
