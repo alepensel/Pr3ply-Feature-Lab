@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { MapPin } from "lucide-react";
 
-// Simplified country → [lat, lng] lookup (approximate centers)
 const COUNTRY_COORDS: Record<string, [number, number]> = {
   "Afghanistan": [33, 65], "Albania": [41, 20], "Algeria": [28, 3], "Andorra": [42.5, 1.5],
   "Angola": [-12, 18], "Argentina": [-34, -64], "Armenia": [40, 45], "Australia": [-25, 134],
@@ -61,14 +60,33 @@ const COUNTRY_COORDS: Record<string, [number, number]> = {
   "Vietnam": [16, 108], "Yemen": [15, 48], "Zambia": [-15, 28], "Zimbabwe": [-20, 30],
 };
 
-// Mercator-like projection to SVG coordinates
 function toSVG(lat: number, lng: number): [number, number] {
   const x = ((lng + 180) / 360) * 800;
   const latRad = (lat * Math.PI) / 180;
   const mercN = Math.log(Math.tan(Math.PI / 4 + latRad / 2));
-  const y = 200 - (mercN / Math.PI) * 200;
+  const y = 250 - (mercN / Math.PI) * 250;
   return [x, y];
 }
+
+// Simplified world map paths (continents as rough shapes)
+const WORLD_PATHS = [
+  // North America
+  "M60,95 L75,80 L100,70 L130,65 L160,60 L185,65 L200,80 L210,95 L205,110 L195,125 L185,140 L175,155 L160,165 L145,175 L130,180 L120,175 L115,160 L110,145 L100,140 L90,130 L80,120 L70,110 Z",
+  // South America
+  "M155,200 L170,195 L185,200 L195,215 L200,235 L205,260 L200,280 L195,300 L185,320 L175,340 L165,350 L155,345 L150,330 L145,310 L140,290 L135,270 L140,250 L145,230 L150,215 Z",
+  // Europe
+  "M340,65 L355,60 L370,55 L385,60 L400,65 L415,70 L420,80 L415,90 L405,100 L395,110 L385,115 L375,110 L365,105 L355,100 L345,95 L340,85 Z",
+  // Africa
+  "M350,135 L365,130 L380,125 L395,130 L410,140 L420,155 L425,175 L420,200 L415,225 L405,250 L395,270 L385,280 L375,275 L365,265 L355,250 L345,230 L340,210 L338,190 L340,170 L345,150 Z",
+  // Asia
+  "M420,55 L450,50 L480,45 L520,50 L560,55 L600,60 L640,70 L660,80 L670,95 L665,110 L650,120 L630,130 L610,135 L590,140 L570,145 L550,150 L530,155 L510,155 L490,150 L470,140 L450,130 L435,120 L425,110 L420,95 L418,75 Z",
+  // Southeast Asia / Indonesia
+  "M545,170 L560,165 L580,170 L600,175 L620,180 L640,185 L655,190 L650,200 L635,205 L615,200 L595,195 L575,190 L555,185 L545,180 Z",
+  // Australia
+  "M590,250 L620,240 L650,238 L680,245 L700,260 L705,280 L695,300 L675,310 L650,315 L625,310 L605,300 L595,285 L590,270 Z",
+  // Greenland
+  "M240,30 L260,25 L280,30 L285,45 L275,55 L260,58 L245,55 L238,45 Z",
+];
 
 interface ParticipantMapProps {
   tutorCountry: string;
@@ -93,54 +111,87 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
 
   const tutorPoint = points.find((p) => p.isTutor);
 
+  // Color palette for pins
+  const pinColors = [
+    "hsl(var(--primary))",
+    "hsl(210, 70%, 50%)",
+    "hsl(175, 60%, 45%)",
+    "hsl(260, 55%, 55%)",
+    "hsl(330, 50%, 50%)",
+  ];
+
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="flex items-center gap-2 mb-3">
+    <div className="rounded-xl border border-border bg-card p-4 h-full flex flex-col">
+      <div className="flex items-center gap-2 mb-2">
         <MapPin className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-bold text-foreground">Connected across the world</h2>
       </div>
-      <svg viewBox="0 0 800 400" className="w-full h-auto" style={{ maxHeight: 180 }}>
-        {/* Minimal continent outlines - dots grid for aesthetic */}
-        <defs>
-          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <circle cx="20" cy="20" r="0.5" className="fill-border" />
-          </pattern>
-        </defs>
-        <rect width="800" height="400" fill="url(#grid)" />
+      <div className="flex-1 flex items-center">
+        <svg viewBox="0 0 800 400" className="w-full h-auto" style={{ maxHeight: 200 }}>
+          {/* World map continent shapes */}
+          {WORLD_PATHS.map((d, i) => (
+            <path
+              key={i}
+              d={d}
+              className="fill-muted/60 stroke-border"
+              strokeWidth="0.5"
+            />
+          ))}
 
-        {/* Connection lines */}
-        {tutorPoint &&
-          points
-            .filter((p) => !p.isTutor)
-            .map((p) => (
-              <line
-                key={p.country}
-                x1={tutorPoint.x}
-                y1={tutorPoint.y}
-                x2={p.x}
-                y2={p.y}
-                className="stroke-primary/30"
-                strokeWidth="1.5"
-                strokeDasharray="6 4"
-              />
-            ))}
+          {/* Connection lines from tutor to students */}
+          {tutorPoint &&
+            points
+              .filter((p) => !p.isTutor)
+              .map((p) => (
+                <line
+                  key={`line-${p.country}`}
+                  x1={tutorPoint.x}
+                  y1={tutorPoint.y}
+                  x2={p.x}
+                  y2={p.y}
+                  className="stroke-primary/25"
+                  strokeWidth="1.5"
+                  strokeDasharray="6 4"
+                />
+              ))}
 
-        {/* Location dots */}
-        {points.map((p) => (
-          <g key={p.country}>
-            <circle cx={p.x} cy={p.y} r={p.isTutor ? 6 : 5} className={p.isTutor ? "fill-primary" : "fill-accent-foreground/70"} />
-            <circle cx={p.x} cy={p.y} r={p.isTutor ? 10 : 8} className={p.isTutor ? "fill-primary/20" : "fill-accent-foreground/10"} />
-            <text
-              x={p.x}
-              y={p.y - 14}
-              textAnchor="middle"
-              className="fill-foreground text-[9px] font-medium"
-            >
-              {p.country}
-            </text>
-          </g>
-        ))}
-      </svg>
+          {/* Pin markers */}
+          {points.map((p, idx) => {
+            const color = pinColors[idx % pinColors.length];
+            return (
+              <g key={p.country}>
+                {/* Pin body - teardrop/balloon shape */}
+                <path
+                  d={`M${p.x},${p.y - 3} 
+                     C${p.x - 8},${p.y - 12} ${p.x - 8},${p.y - 22} ${p.x},${p.y - 26}
+                     C${p.x + 8},${p.y - 22} ${p.x + 8},${p.y - 12} ${p.x},${p.y - 3}Z`}
+                  fill={color}
+                  stroke="white"
+                  strokeWidth="1.5"
+                />
+                {/* Inner white circle */}
+                <circle
+                  cx={p.x}
+                  cy={p.y - 16}
+                  r="4"
+                  fill="white"
+                />
+                {/* Country label */}
+                <text
+                  x={p.x}
+                  y={p.y + 10}
+                  textAnchor="middle"
+                  className="fill-muted-foreground"
+                  fontSize="8"
+                  fontWeight="500"
+                >
+                  {p.country}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
     </div>
   );
 };
