@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const Header = () => {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
+  const { isTutor } = useUserRole();
   const navigate = useNavigate();
   const location = useLocation();
 
