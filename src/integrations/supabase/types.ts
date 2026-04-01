@@ -110,6 +110,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      user_session_ids: { Args: { _user_id: string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "tutor" | "student"
