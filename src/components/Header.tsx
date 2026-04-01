@@ -78,7 +78,7 @@ const Header = () => {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground" onClick={() => navigate("/dashboard")}>
+              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground" onClick={() => navigate(dashboardPath)}>
                 <CalendarCheck className="h-5 w-5" />
               </Button>
               <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
