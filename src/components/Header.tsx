@@ -3,6 +3,7 @@ import pr3plyLogo from "@/assets/preply-logo.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, Bell, Heart, CalendarCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
