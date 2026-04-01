@@ -39,23 +39,19 @@ const TutorDashboard = () => {
       if (!user) return;
       const { data } = await supabase
         .from("bookings")
-        .select("*, profiles!bookings_user_id_fkey(first_name, last_name, avatar_url, country)")
+        .select("*")
         .eq("status", "confirmed")
         .order("created_at", { ascending: false });
 
-      // If the join fails (no FK), fetch separately
-      if (data && data.length > 0 && data[0].profiles !== undefined) {
-        setBookings(data as BookingWithProfile[]);
-      } else if (data) {
-        // Fallback: fetch profiles separately
-        const userIds = [...new Set(data.map((b: any) => b.user_id))];
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map((b) => b.user_id))];
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, first_name, last_name, avatar_url, country")
           .in("user_id", userIds);
-        const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+        const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
         setBookings(
-          data.map((b: any) => ({
+          data.map((b) => ({
             ...b,
             profiles: profileMap.get(b.user_id) || null,
           }))
