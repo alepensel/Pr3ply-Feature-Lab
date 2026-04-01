@@ -20,10 +20,12 @@ const Header = () => {
     navigate("/");
   };
 
+  const dashboardPath = isTutor ? "/tutor-dashboard" : "/dashboard";
+
   const navItems = user
     ? [
         { label: "Home", path: "/" },
-        { label: "My Sessions", path: "/dashboard" },
+        { label: "My Sessions", path: dashboardPath },
         { label: "Settings", path: "/profile" },
       ]
     : [
