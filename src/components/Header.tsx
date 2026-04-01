@@ -3,6 +3,7 @@ import pr3plyLogo from "@/assets/preply-logo.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, Bell, Heart, CalendarCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,7 @@ import { cn } from "@/lib/utils";
 const Header = () => {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
+  const { isTutor } = useUserRole();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -18,10 +20,12 @@ const Header = () => {
     navigate("/");
   };
 
+  const dashboardPath = isTutor ? "/tutor-dashboard" : "/dashboard";
+
   const navItems = user
     ? [
         { label: "Home", path: "/" },
-        { label: "My Sessions", path: "/dashboard" },
+        { label: "My Sessions", path: dashboardPath },
         { label: "Settings", path: "/profile" },
       ]
     : [
@@ -74,7 +78,7 @@ const Header = () => {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground" onClick={() => navigate("/dashboard")}>
+              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground" onClick={() => navigate(dashboardPath)}>
                 <CalendarCheck className="h-5 w-5" />
               </Button>
               <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground">
