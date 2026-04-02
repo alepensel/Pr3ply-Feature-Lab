@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Video, Users, Clock, ArrowLeft, PhoneOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useMemo, useState } from "react";
 
 const JITSI_DOMAIN = "meet.jit.si";
