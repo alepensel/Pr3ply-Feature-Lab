@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { sharedSessions } from "@/data/mockData";
+import { useSessions } from "@/hooks/useSessions";
 import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,6 @@ const useNow = (intervalMs = 30_000) => {
 const isSessionJoinable = (scheduledAt: string, now: Date) => {
   const start = new Date(scheduledAt);
   const diffMin = (start.getTime() - now.getTime()) / 60_000;
-  // Joinable 10 minutes before start and up to 60 minutes after
   return diffMin <= 10 && diffMin > -60;
 };
 
@@ -46,6 +45,7 @@ const getTimeUntilLabel = (scheduledAt: string, now: Date) => {
 const StudentDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { sessions } = useSessions();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const now = useNow();
@@ -71,7 +71,7 @@ const StudentDashboard = () => {
   }, [user]);
 
   const getSessionDetails = (sessionId: string) =>
-    sharedSessions.find((s) => s.id === sessionId);
+    sessions.find((s) => s.id === sessionId);
 
   if (authLoading || loading) {
     return (
@@ -112,8 +112,8 @@ const StudentDashboard = () => {
               const session = getSessionDetails(booking.session_id);
               if (!session) return null;
 
-              const joinable = isSessionJoinable(session.scheduledAt, now);
-              const timeLabel = getTimeUntilLabel(session.scheduledAt, now);
+              const joinable = isSessionJoinable(session.scheduled_at, now);
+              const timeLabel = getTimeUntilLabel(session.scheduled_at, now);
 
               return (
                 <Card key={booking.id} className="overflow-hidden">
