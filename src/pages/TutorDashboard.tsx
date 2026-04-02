@@ -2,71 +2,61 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { sharedSessions } from "@/data/mockData";
+import { useSessions, type Session } from "@/hooks/useSessions";
 import Header from "@/components/Header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import SessionCard from "@/components/SessionCard";
+import SessionFormDialog from "@/components/SessionFormDialog";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, Clock, Users, Video, Loader2 } from "lucide-react";
-
-interface BookingWithProfile {
-  id: string;
-  session_id: string;
-  user_id: string;
-  status: string;
-  created_at: string;
-  profiles: {
-    first_name: string | null;
-    last_name: string | null;
-    avatar_url: string | null;
-    country: string | null;
-  } | null;
-}
+import { Calendar, Loader2, Plus } from "lucide-react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const TutorDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState<BookingWithProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { sessions, loading, refetch } = useSessions();
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
 
-  useEffect(() => {
-    const fetchAllBookings = async () => {
-      if (!user) return;
-      const { data } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("status", "confirmed")
-        .order("created_at", { ascending: false });
+  const handleEdit = (session: Session) => {
+    setEditingSession(session);
+    setFormOpen(true);
+  };
 
-      if (data && data.length > 0) {
-        const userIds = [...new Set(data.map((b) => b.user_id))];
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("user_id, first_name, last_name, avatar_url, country")
-          .in("user_id", userIds);
-        const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
-        setBookings(
-          data.map((b) => ({
-            ...b,
-            profiles: profileMap.get(b.user_id) || null,
-          }))
-        );
-      }
-      setLoading(false);
-    };
-    if (user) fetchAllBookings();
-  }, [user]);
+  const handleCreate = () => {
+    setEditingSession(null);
+    setFormOpen(true);
+  };
 
-  // Group bookings by session
-  const sessionBookings = sharedSessions.map((session) => {
-    const sessionBks = bookings.filter((b) => b.session_id === session.id);
-    return { session, bookings: sessionBks };
-  }).filter((s) => s.bookings.length > 0);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    const { error } = await supabase.from("sessions").delete().eq("id", deleteId);
+    setDeleting(false);
+    setDeleteId(null);
+    if (error) {
+      toast.error("Failed to delete session");
+      return;
+    }
+    toast.success("Session deleted");
+    refetch();
+  };
 
   if (authLoading || loading) {
     return (
@@ -79,104 +69,77 @@ const TutorDashboard = () => {
     );
   }
 
+  // Filter to tutor's own sessions
+  const mySessions = sessions.filter((s) => s.tutor_id === user?.id);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">My Sessions (Tutor)</h1>
-          <p className="text-muted-foreground mt-2">
-            View all booked sessions and join your students
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">My Sessions (Tutor)</h1>
+            <p className="text-muted-foreground mt-2">
+              Create, edit, and manage your conversation sessions
+            </p>
+          </div>
+          <Button onClick={handleCreate} className="bg-preply-pink text-foreground hover:bg-preply-pink/90 font-semibold gap-2">
+            <Plus className="h-4 w-4" />
+            New Session
+          </Button>
         </div>
 
-        {sessionBookings.length === 0 ? (
+        {mySessions.length === 0 ? (
           <Card>
             <CardContent className="py-16 text-center">
               <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No sessions booked yet</h3>
-              <p className="text-muted-foreground">
-                No students have booked any sessions yet.
+              <h3 className="text-lg font-semibold mb-2">No sessions yet</h3>
+              <p className="text-muted-foreground mb-6">
+                Create your first session to start teaching!
               </p>
+              <Button onClick={handleCreate} className="bg-preply-pink text-foreground hover:bg-preply-pink/90 gap-2">
+                <Plus className="h-4 w-4" />
+                Create Session
+              </Button>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {sessionBookings.map(({ session, bookings: bks }) => (
-              <Card key={session.id} className="overflow-hidden">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <Badge variant="secondary" className="text-xs font-medium">
-                      {session.theme} · {session.level}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {bks.length}/{session.maxSpots} booked
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-lg">{session.scenario}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>{session.nextSession}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span>{session.duration}</span>
-                  </div>
-
-                  {/* Students enrolled */}
-                  <div className="pt-2 border-t border-border">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5" /> Students enrolled
-                    </p>
-                    <div className="space-y-2">
-                      {bks.map((b) => {
-                        const p = b.profiles;
-                        const name = p?.first_name
-                          ? `${p.first_name} ${p.last_name || ""}`.trim()
-                          : "Student";
-                        return (
-                          <div key={b.id} className="flex items-center gap-2">
-                            <Avatar className="h-7 w-7">
-                              <AvatarImage src={p?.avatar_url || undefined} />
-                              <AvatarFallback className="text-xs">
-                                {name[0]?.toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm font-medium">{name}</span>
-                            {p?.country && (
-                              <span className="text-xs text-muted-foreground">
-                                ({p.country})
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="pt-3 flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => navigate(`/session/${session.id}`)}
-                    >
-                      View Details
-                    </Button>
-                    <Button
-                      className="flex-1 bg-preply-pink text-foreground hover:bg-preply-pink/90 gap-1.5"
-                      onClick={() => navigate(`/session/${session.id}/room`)}
-                    >
-                      <Video className="h-4 w-4" />
-                      Join
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+            {mySessions.map((session) => (
+              <SessionCard
+                key={session.id}
+                {...session}
+                isTutor
+                onEdit={() => handleEdit(session)}
+                onDelete={() => setDeleteId(session.id)}
+              />
             ))}
           </div>
         )}
+
+        <SessionFormDialog
+          open={formOpen}
+          onOpenChange={setFormOpen}
+          session={editingSession}
+          onSaved={refetch}
+        />
+
+        <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete session?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete this session and cannot be undone. Existing bookings will also be affected.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {deleting ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );

@@ -4,13 +4,14 @@ import { Clock, Users, Globe, Zap, ArrowLeft, CheckCircle, Calendar, Star, Crown
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { sharedSessions } from "@/data/mockData";
+import { useSession } from "@/hooks/useSessions";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Loader2 } from "lucide-react";
 
 interface Participant {
   user_id: string;
@@ -23,12 +24,11 @@ const SessionDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { session, loading: sessionLoading } = useSession(id);
   const [isBooked, setIsBooked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [checkingBooking, setCheckingBooking] = useState(true);
   const [participants, setParticipants] = useState<Participant[]>([]);
-
-  const session = sharedSessions.find((s) => s.id === id);
 
   useEffect(() => {
     const checkExistingBooking = async () => {
@@ -69,6 +69,18 @@ const SessionDetail = () => {
     };
     fetchParticipants();
   }, [session, isBooked]);
+
+  if (sessionLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container py-20 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!session) {
     return (
@@ -140,7 +152,6 @@ const SessionDetail = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       <main className="container py-4 flex-1 flex flex-col">
-        {/* Back button */}
         <Button
           variant="ghost"
           asChild
@@ -154,9 +165,7 @@ const SessionDetail = () => {
         </Button>
 
         <div className="flex flex-col gap-4 flex-1">
-          {/* ROW 1: Session info (left) + Booking card (right) — same height */}
           <div className="grid gap-4 lg:grid-cols-3">
-            {/* Session header — spans 2 cols */}
             <div className="lg:col-span-2 rounded-xl bg-preply-pink-light p-5 flex flex-col">
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 <Badge variant="secondary" className="bg-background font-semibold text-sm">
@@ -181,7 +190,6 @@ const SessionDetail = () => {
               </h1>
               <p className="mt-1.5 text-sm text-muted-foreground">{session.description}</p>
 
-              {/* What you'll practice */}
               <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1">
                 {practicePoints.map((item) => (
                   <div key={item} className="flex items-start gap-2">
@@ -192,7 +200,6 @@ const SessionDetail = () => {
               </div>
             </div>
 
-            {/* Booking sidebar */}
             <div className="lg:col-span-1 rounded-xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex items-baseline justify-center gap-1 mb-3">
@@ -258,9 +265,7 @@ const SessionDetail = () => {
             </div>
           </div>
 
-          {/* ROW 2: Tutor + Who's joining + Map — 3 equal columns */}
           <div className="grid gap-4 lg:grid-cols-3 flex-1">
-            {/* Your tutor */}
             <div className="rounded-xl border border-border bg-card p-4">
               <h2 className="text-sm font-bold text-foreground mb-2">Your tutor</h2>
               <div className="flex items-center gap-3">
@@ -285,7 +290,6 @@ const SessionDetail = () => {
               <p className="mt-2 text-xs text-muted-foreground leading-relaxed line-clamp-3">{session.tutor.bio}</p>
             </div>
 
-            {/* Who's joining */}
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-sm font-bold text-foreground">Who's joining</h2>
@@ -296,7 +300,6 @@ const SessionDetail = () => {
               </div>
 
               <div className="space-y-2">
-                {/* Tutor slot */}
                 <div className="flex items-center gap-2.5 rounded-lg bg-accent/50 p-2.5">
                   <Avatar className="h-8 w-8 border-2 border-primary">
                     <AvatarImage src={session.tutor.avatar} alt={session.tutor.name} className="object-cover" />
@@ -311,7 +314,6 @@ const SessionDetail = () => {
                   <Crown className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                 </div>
 
-                {/* Filled student slots */}
                 {participants.map((p) => {
                   const isYou = p.user_id === user?.id;
                   const name = p.display_name || "Student";
@@ -334,7 +336,6 @@ const SessionDetail = () => {
                   );
                 })}
 
-                {/* Empty slots */}
                 {Array.from({ length: emptySlots }).map((_, i) => (
                   <div key={`empty-${i}`} className="flex items-center gap-2.5 rounded-lg border-2 border-dashed border-border p-2.5">
                     <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
@@ -359,7 +360,6 @@ const SessionDetail = () => {
               )}
             </div>
 
-            {/* Participant Map */}
             <ParticipantMap
               tutorCountry={session.tutor.country}
               participantCountries={participants.map((p) => p.country)}

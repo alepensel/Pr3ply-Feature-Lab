@@ -1,13 +1,13 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
-import { sharedSessions } from "@/data/mockData";
+import { useSession } from "@/hooks/useSessions";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Video, Users, Clock, ArrowLeft, PhoneOff } from "lucide-react";
+import { Video, Users, Clock, ArrowLeft, PhoneOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useMemo, useState } from "react";
@@ -20,7 +20,7 @@ const SessionRoom = () => {
   const { profile } = useProfile();
   const { isTutor } = useUserRole();
   const navigate = useNavigate();
-  const session = sharedSessions.find((s) => s.id === id);
+  const { session, loading } = useSession(id);
   const [inCall, setInCall] = useState(false);
 
   const roomName = `Pr3plyShared${id}`;
@@ -57,6 +57,18 @@ const SessionRoom = () => {
   const endCall = () => {
     setInCall(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container py-20 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!session) {
     return (
@@ -130,7 +142,6 @@ const SessionRoom = () => {
               <div className="p-8 space-y-6">
                 <div className="flex items-center justify-center gap-6 flex-wrap">
                   {isTutor ? (
-                    /* Tutor viewing their own session — single avatar */
                     <div className="flex flex-col items-center gap-2">
                       <Avatar className="h-16 w-16 border-4 border-primary">
                         <AvatarImage src={profile?.avatar_url || session.tutor.avatar} alt={session.tutor.name} className="object-cover" />
@@ -143,7 +154,6 @@ const SessionRoom = () => {
                     </div>
                   ) : (
                     <>
-                      {/* Tutor */}
                       <div className="flex flex-col items-center gap-2">
                         <Avatar className="h-16 w-16 border-4 border-primary">
                           <AvatarImage src={session.tutor.avatar} alt={session.tutor.name} className="object-cover" />
@@ -154,7 +164,6 @@ const SessionRoom = () => {
                           <Badge variant="outline" className="text-xs">Tutor</Badge>
                         </div>
                       </div>
-                      {/* Current user (You) */}
                       <div className="flex flex-col items-center gap-2">
                         <Avatar className="h-16 w-16 border-4 border-preply-pink">
                           <AvatarImage src={profile?.avatar_url || undefined} alt="You" className="object-cover" />
@@ -171,7 +180,6 @@ const SessionRoom = () => {
                       </div>
                     </>
                   )}
-                  {/* Open spots — adjust count based on whether tutor is also a participant */}
                   {Array.from({ length: Math.max(0, session.maxSpots - (isTutor ? 1 : 2)) }).map((_, i) => (
                     <div key={i} className="flex flex-col items-center gap-2">
                       <div className="h-16 w-16 rounded-full bg-secondary border-4 border-border flex items-center justify-center">
