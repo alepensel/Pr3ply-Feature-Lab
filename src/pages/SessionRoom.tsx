@@ -18,6 +18,7 @@ const SessionRoom = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { isTutor } = useUserRole();
   const navigate = useNavigate();
   const session = sharedSessions.find((s) => s.id === id);
   const [inCall, setInCall] = useState(false);
