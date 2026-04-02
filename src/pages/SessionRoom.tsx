@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Video, Users, Clock, ArrowLeft, PhoneOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useMemo, useState } from "react";
 
 const JITSI_DOMAIN = "meet.jit.si";
@@ -17,6 +18,7 @@ const SessionRoom = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { isTutor } = useUserRole();
   const navigate = useNavigate();
   const session = sharedSessions.find((s) => s.id === id);
   const [inCall, setInCall] = useState(false);
@@ -127,34 +129,50 @@ const SessionRoom = () => {
 
               <div className="p-8 space-y-6">
                 <div className="flex items-center justify-center gap-6 flex-wrap">
-                  {/* Tutor */}
-                  <div className="flex flex-col items-center gap-2">
-                    <Avatar className="h-16 w-16 border-4 border-primary">
-                      <AvatarImage src={session.tutor.avatar} alt={session.tutor.name} className="object-cover" />
-                      <AvatarFallback>{session.tutor.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="text-center">
-                      <p className="text-sm font-semibold">{session.tutor.name}</p>
-                      <Badge variant="outline" className="text-xs">Tutor</Badge>
+                  {isTutor ? (
+                    /* Tutor viewing their own session — single avatar */
+                    <div className="flex flex-col items-center gap-2">
+                      <Avatar className="h-16 w-16 border-4 border-primary">
+                        <AvatarImage src={profile?.avatar_url || session.tutor.avatar} alt={session.tutor.name} className="object-cover" />
+                        <AvatarFallback>{session.tutor.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="text-center">
+                        <p className="text-sm font-semibold">{session.tutor.name}</p>
+                        <Badge variant="outline" className="text-xs bg-preply-pink-light">Tutor (You)</Badge>
+                      </div>
                     </div>
-                  </div>
-                  {/* Current user (You) */}
-                  <div className="flex flex-col items-center gap-2">
-                    <Avatar className="h-16 w-16 border-4 border-preply-pink">
-                      <AvatarImage src={profile?.avatar_url || undefined} alt="You" className="object-cover" />
-                      <AvatarFallback className="text-lg font-bold bg-secondary text-muted-foreground">
-                        {profile?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="text-center">
-                      <p className="text-sm font-semibold">
-                        {profile?.first_name ? `${profile.first_name} ${profile.last_name || ""}`.trim() : "You"}
-                      </p>
-                      <Badge variant="outline" className="text-xs bg-preply-pink-light">You</Badge>
-                    </div>
-                  </div>
-                  {/* Other open spots */}
-                  {Array.from({ length: Math.max(0, session.maxSpots - 2) }).map((_, i) => (
+                  ) : (
+                    <>
+                      {/* Tutor */}
+                      <div className="flex flex-col items-center gap-2">
+                        <Avatar className="h-16 w-16 border-4 border-primary">
+                          <AvatarImage src={session.tutor.avatar} alt={session.tutor.name} className="object-cover" />
+                          <AvatarFallback>{session.tutor.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="text-center">
+                          <p className="text-sm font-semibold">{session.tutor.name}</p>
+                          <Badge variant="outline" className="text-xs">Tutor</Badge>
+                        </div>
+                      </div>
+                      {/* Current user (You) */}
+                      <div className="flex flex-col items-center gap-2">
+                        <Avatar className="h-16 w-16 border-4 border-preply-pink">
+                          <AvatarImage src={profile?.avatar_url || undefined} alt="You" className="object-cover" />
+                          <AvatarFallback className="text-lg font-bold bg-secondary text-muted-foreground">
+                            {profile?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="text-center">
+                          <p className="text-sm font-semibold">
+                            {profile?.first_name ? `${profile.first_name} ${profile.last_name || ""}`.trim() : "You"}
+                          </p>
+                          <Badge variant="outline" className="text-xs bg-preply-pink-light">You</Badge>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {/* Open spots — adjust count based on whether tutor is also a participant */}
+                  {Array.from({ length: Math.max(0, session.maxSpots - (isTutor ? 1 : 2)) }).map((_, i) => (
                     <div key={i} className="flex flex-col items-center gap-2">
                       <div className="h-16 w-16 rounded-full bg-secondary border-4 border-border flex items-center justify-center">
                         <Users className="h-6 w-6 text-muted-foreground" />
