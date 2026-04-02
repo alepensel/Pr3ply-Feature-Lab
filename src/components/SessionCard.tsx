@@ -1,24 +1,13 @@
-import { Clock, Users, Globe, Star, Zap } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Clock, Users, Globe, Star, Zap, Pencil, Trash2, Eye } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { tutor as TutorType } from "@/data/mockData";
+import type { SessionWithTutor } from "@/hooks/useSessions";
 
-interface SessionCardProps {
-  id: string;
-  theme: string;
-  scenario: string;
-  language: string;
-  level: string;
-  duration: string;
-  price: number;
-  tutor: typeof TutorType;
-  spotsLeft: number;
-  maxSpots: number;
-  nextSession: string;
-  scheduledAt: string;
-  meetLink: string;
-  description: string;
+interface SessionCardProps extends SessionWithTutor {
+  isTutor?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const SessionCard = ({
@@ -33,10 +22,14 @@ const SessionCard = ({
   spotsLeft,
   nextSession,
   description,
+  isTutor,
+  onEdit,
+  onDelete,
 }: SessionCardProps) => {
-  return (
-    <Link to={`/session/${id}`} className="block">
-      <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary hover:shadow-xl">
+  const navigate = useNavigate();
+
+  const cardContent = (
+    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary hover:shadow-xl">
       {/* Header with theme */}
       <div className="bg-preply-pink-light p-6">
         <Badge variant="secondary" className="mb-3 bg-background font-semibold">
@@ -94,14 +87,55 @@ const SessionCard = ({
               <span>{spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left</span>
             </div>
           </div>
-          <Button className="bg-preply-pink text-foreground hover:bg-preply-pink/90 rounded-full font-semibold gap-2">
-            <Zap className="h-4 w-4 fill-current" />
-            Book lesson
-          </Button>
+
+          {isTutor ? (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/session/${id}`); }}
+              >
+                <Eye className="h-3.5 w-3.5" />
+                View
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(); }}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete?.(); }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ) : (
+            <Button className="bg-preply-pink text-foreground hover:bg-preply-pink/90 rounded-full font-semibold gap-2">
+              <Zap className="h-4 w-4 fill-current" />
+              Book lesson
+            </Button>
+          )}
         </div>
       </div>
     </div>
-  </Link>
+  );
+
+  if (isTutor) {
+    return <div>{cardContent}</div>;
+  }
+
+  return (
+    <Link to={`/session/${id}`} className="block">
+      {cardContent}
+    </Link>
   );
 };
 
