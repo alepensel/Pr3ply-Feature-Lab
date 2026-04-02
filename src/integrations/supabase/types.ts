@@ -80,6 +80,60 @@ export type Database = {
         }
         Relationships: []
       }
+      sessions: {
+        Row: {
+          created_at: string
+          description: string
+          duration: string
+          id: string
+          language: string
+          level: string
+          max_spots: number
+          meet_link: string
+          next_session: string
+          price: number
+          scenario: string
+          scheduled_at: string
+          theme: string
+          tutor_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          duration?: string
+          id?: string
+          language?: string
+          level?: string
+          max_spots?: number
+          meet_link?: string
+          next_session?: string
+          price?: number
+          scenario: string
+          scheduled_at?: string
+          theme: string
+          tutor_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration?: string
+          id?: string
+          language?: string
+          level?: string
+          max_spots?: number
+          meet_link?: string
+          next_session?: string
+          price?: number
+          scenario?: string
+          scheduled_at?: string
+          theme?: string
+          tutor_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
