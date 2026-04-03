@@ -4,15 +4,14 @@ import { useProfile } from "@/hooks/useProfile";
 import { useSession } from "@/hooks/useSessions";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AgoraVideoCall from "@/components/AgoraVideoCall";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Video, Users, Clock, ArrowLeft, PhoneOff, Loader2 } from "lucide-react";
+import { Video, Users, Clock, ArrowLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useMemo, useState } from "react";
-
-const JITSI_DOMAIN = "meet.jit.si";
 
 const SessionRoom = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +22,7 @@ const SessionRoom = () => {
   const { session, loading } = useSession(id);
   const [inCall, setInCall] = useState(false);
 
-  const roomName = `Pr3plyShared${id}`;
+  const channelName = `session-${id}`;
 
   const displayName = useMemo(() => {
     if (profile?.first_name) {
@@ -31,32 +30,6 @@ const SessionRoom = () => {
     }
     return user?.email?.split("@")[0] || "Student";
   }, [profile, user]);
-
-  const jitsiUrl = useMemo(() => {
-    const config = [
-      "config.prejoinConfig.enabled=false",
-      "config.prejoinPageEnabled=false",
-      "config.startWithAudioMuted=true",
-      "config.startWithVideoMuted=false",
-      "config.disableDeepLinking=true",
-      "config.hideConferenceSubject=true",
-      "config.hideConferenceTimer=true",
-      "config.enableInsecureRoomNameWarning=false",
-      "config.toolbarButtons=%5B%22microphone%22%2C%22camera%22%2C%22desktop%22%2C%22chat%22%2C%22raisehand%22%2C%22tileview%22%2C%22hangup%22%5D",
-      "interfaceConfig.SHOW_JITSI_WATERMARK=false",
-      "interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false",
-      "interfaceConfig.TOOLBAR_ALWAYS_VISIBLE=true",
-      "interfaceConfig.DISABLE_JOIN_LEAVE_NOTIFICATIONS=true",
-      "interfaceConfig.MOBILE_APP_PROMO=false",
-      `userInfo.displayName=${encodeURIComponent(displayName)}`,
-    ].join("&");
-
-    return `https://${JITSI_DOMAIN}/${roomName}#${config}`;
-  }, [roomName, displayName]);
-
-  const endCall = () => {
-    setInCall(false);
-  };
 
   if (loading) {
     return (
@@ -103,25 +76,16 @@ const SessionRoom = () => {
                 </Badge>
                 <span className="text-sm font-medium">{session.scenario}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  <span>{session.maxSpots} participants</span>
-                </div>
-                <Button variant="destructive" size="sm" className="gap-1.5" onClick={endCall}>
-                  <PhoneOff className="h-4 w-4" />
-                  Leave
-                </Button>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span>{session.maxSpots} participants</span>
               </div>
             </div>
-            <div className="relative flex-1" style={{ minHeight: 0 }}>
-              <iframe
-                src={jitsiUrl}
-                allow="camera;microphone;fullscreen;display-capture;autoplay"
-                className="absolute inset-0 w-full h-full border-0"
-                title="Video session"
-              />
-            </div>
+            <AgoraVideoCall
+              channelName={channelName}
+              displayName={displayName}
+              onLeave={() => setInCall(false)}
+            />
           </div>
         ) : (
           <div className="container py-8 md:py-16 max-w-3xl mx-auto">
