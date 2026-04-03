@@ -164,6 +164,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      session_booking_counts: {
+        Args: { _session_ids: string[] }
+        Returns: {
+          count: number
+          session_id: string
+        }[]
+      }
       user_session_ids: { Args: { _user_id: string }; Returns: string[] }
     }
     Enums: {
