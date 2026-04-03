@@ -39,24 +39,23 @@ export const useSessions = () => {
       .order("scheduled_at", { ascending: true });
 
     if (data) {
-      // Get booking counts per session
       const sessionIds = data.map((s: any) => s.id);
-      const { data: bookings } = await supabase
-        .from("bookings")
-        .select("session_id")
-        .eq("status", "confirmed")
-        .in("session_id", sessionIds);
+
+      // Use security definer function so ALL users see accurate counts
+      const { data: counts } = await supabase.rpc("session_booking_counts", {
+        _session_ids: sessionIds,
+      });
 
       const bookingCounts: Record<string, number> = {};
-      (bookings || []).forEach((b: any) => {
-        bookingCounts[b.session_id] = (bookingCounts[b.session_id] || 0) + 1;
+      (counts || []).forEach((row: any) => {
+        bookingCounts[row.session_id] = Number(row.count);
       });
 
       const mapped: SessionWithTutor[] = data.map((s: any) => {
         const booked = bookingCounts[s.id] || 0;
         return {
           ...s,
-          tutor: defaultTutor, // MVP: single tutor
+          tutor: defaultTutor,
           spotsLeft: Math.max(0, s.max_spots - booked),
           maxSpots: s.max_spots,
           nextSession: s.next_session,
@@ -88,13 +87,11 @@ export const useSession = (id: string | undefined) => {
         .maybeSingle();
 
       if (data) {
-        const { data: bookings } = await supabase
-          .from("bookings")
-          .select("session_id")
-          .eq("session_id", data.id)
-          .eq("status", "confirmed");
+        const { data: counts } = await supabase.rpc("session_booking_counts", {
+          _session_ids: [data.id],
+        });
 
-        const booked = bookings?.length || 0;
+        const booked = counts?.[0]?.count ? Number(counts[0].count) : 0;
         setSession({
           ...data,
           tutor: defaultTutor,
