@@ -1,8 +1,9 @@
-import { Clock, Users, Globe, Star, Zap, Pencil, Trash2, Eye, CheckCircle } from "lucide-react";
+import { Clock, Users, Globe, Star, Zap, Pencil, Trash2, Eye, CheckCircle, Ban } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { SessionWithTutor } from "@/hooks/useSessions";
+import { formatNextSession } from "@/lib/formatNextSession";
 
 interface SessionCardProps extends SessionWithTutor {
   isTutor?: boolean;
