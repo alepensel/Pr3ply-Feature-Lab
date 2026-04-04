@@ -68,7 +68,6 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
       setMaxSpots("2");
       setScheduledDate(undefined);
       setScheduledTime("14:00");
-      setNextSessionLabel("");
     }
   }, [session, open]);
 
