@@ -42,7 +42,7 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
   const [meetLink] = useState("");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
   const [scheduledTime, setScheduledTime] = useState("14:00");
-  const [nextSessionLabel, setNextSessionLabel] = useState("");
+  const [nextSessionLabel] = useState("");
 
   useEffect(() => {
     if (session) {
