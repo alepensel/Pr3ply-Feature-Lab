@@ -54,7 +54,6 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
       setDuration(session.duration);
       setPrice(String(session.price));
       setMaxSpots(String(session.max_spots));
-      setMeetLink(session.meet_link);
       setNextSessionLabel(session.next_session);
       const d = new Date(session.scheduled_at);
       setScheduledDate(d);
