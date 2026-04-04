@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
+import { formatNextSession } from "@/lib/formatNextSession";
 
 interface Participant {
   user_id: string;
