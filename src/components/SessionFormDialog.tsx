@@ -39,10 +39,10 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
   const [duration, setDuration] = useState("45 min");
   const [price, setPrice] = useState("16");
   const [maxSpots, setMaxSpots] = useState("2");
-  const [meetLink, setMeetLink] = useState("");
+  const [meetLink] = useState("");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
   const [scheduledTime, setScheduledTime] = useState("14:00");
-  const [nextSessionLabel, setNextSessionLabel] = useState("");
+  const [nextSessionLabel] = useState("");
 
   useEffect(() => {
     if (session) {
@@ -54,8 +54,6 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
       setDuration(session.duration);
       setPrice(String(session.price));
       setMaxSpots(String(session.max_spots));
-      setMeetLink(session.meet_link);
-      setNextSessionLabel(session.next_session);
       const d = new Date(session.scheduled_at);
       setScheduledDate(d);
       setScheduledTime(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
@@ -68,10 +66,8 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
       setDuration("45 min");
       setPrice("16");
       setMaxSpots("2");
-      setMeetLink("");
       setScheduledDate(undefined);
       setScheduledTime("14:00");
-      setNextSessionLabel("");
     }
   }, [session, open]);
 
@@ -100,7 +96,7 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
     const scheduled = new Date(scheduledDate);
     scheduled.setHours(h, m, 0, 0);
 
-    const label = nextSessionLabel.trim() || format(scheduled, "EEE, h:mm a");
+    const label = format(scheduled, "EEE, h:mm a");
 
     const row = {
       tutor_id: user.id,
@@ -112,7 +108,7 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
       duration,
       price: parseFloat(price) || 16,
       max_spots: parseInt(maxSpots) || 2,
-      meet_link: meetLink.trim(),
+      meet_link: "",
       scheduled_at: scheduled.toISOString(),
       next_session: label,
     };
@@ -235,18 +231,6 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
             </div>
           </div>
 
-          {/* Display label */}
-          <div>
-            <Label>Display label (optional)</Label>
-            <Input value={nextSessionLabel} onChange={(e) => setNextSessionLabel(e.target.value)} placeholder="e.g. Tomorrow, 2:00 PM" />
-            <p className="text-xs text-muted-foreground mt-1">Shown on the card. Auto-generated if empty.</p>
-          </div>
-
-          {/* Meet link */}
-          <div>
-            <Label>Meeting link</Label>
-            <Input value={meetLink} onChange={(e) => setMeetLink(e.target.value)} placeholder="https://meet.google.com/..." />
-          </div>
 
           <Button onClick={handleSave} disabled={saving} className="w-full bg-preply-pink text-foreground hover:bg-preply-pink/90 font-semibold">
             {saving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Saving...</> : session ? "Update Session" : "Create Session"}
