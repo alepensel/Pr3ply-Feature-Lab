@@ -125,6 +125,11 @@ const SessionCard = ({
               <CheckCircle className="h-4 w-4" />
               Booked
             </Button>
+          ) : spotsLeft === 0 ? (
+            <Button className="bg-preply-pink-light text-muted-foreground rounded-full font-semibold gap-2 cursor-default hover:bg-preply-pink-light" disabled>
+              <Ban className="h-4 w-4" />
+              Sold out
+            </Button>
           ) : (
             <Button className="bg-preply-pink text-foreground hover:bg-preply-pink/90 rounded-full font-semibold gap-2">
               <Zap className="h-4 w-4 fill-current" />
