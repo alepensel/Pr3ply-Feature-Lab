@@ -1,4 +1,4 @@
-import { Clock, Users, Globe, Star, Zap, Pencil, Trash2, Eye } from "lucide-react";
+import { Clock, Users, Globe, Star, Zap, Pencil, Trash2, Eye, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import type { SessionWithTutor } from "@/hooks/useSessions";
 
 interface SessionCardProps extends SessionWithTutor {
   isTutor?: boolean;
+  isBooked?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -23,6 +24,7 @@ const SessionCard = ({
   nextSession,
   description,
   isTutor,
+  isBooked,
   onEdit,
   onDelete,
 }: SessionCardProps) => {
@@ -117,6 +119,11 @@ const SessionCard = ({
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
+          ) : isBooked ? (
+            <Button className="bg-secondary text-muted-foreground rounded-full font-semibold gap-2 cursor-default hover:bg-secondary" disabled>
+              <CheckCircle className="h-4 w-4" />
+              Booked
+            </Button>
           ) : (
             <Button className="bg-preply-pink text-foreground hover:bg-preply-pink/90 rounded-full font-semibold gap-2">
               <Zap className="h-4 w-4 fill-current" />
