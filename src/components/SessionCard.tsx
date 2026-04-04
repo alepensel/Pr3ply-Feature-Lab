@@ -6,6 +6,7 @@ import type { SessionWithTutor } from "@/hooks/useSessions";
 
 interface SessionCardProps extends SessionWithTutor {
   isTutor?: boolean;
+  isBooked?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
 }
