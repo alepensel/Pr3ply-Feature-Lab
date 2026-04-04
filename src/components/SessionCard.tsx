@@ -1,8 +1,9 @@
-import { Clock, Users, Globe, Star, Zap, Pencil, Trash2, Eye, CheckCircle } from "lucide-react";
+import { Clock, Users, Globe, Star, Zap, Pencil, Trash2, Eye, CheckCircle, Ban } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { SessionWithTutor } from "@/hooks/useSessions";
+import { formatNextSession } from "@/lib/formatNextSession";
 
 interface SessionCardProps extends SessionWithTutor {
   isTutor?: boolean;
@@ -77,7 +78,7 @@ const SessionCard = ({
         {/* Next session */}
         <div className="mb-4 rounded-lg bg-secondary p-3">
           <p className="text-xs text-muted-foreground">Next session</p>
-          <p className="text-sm font-semibold text-foreground">{nextSession}</p>
+          <p className="text-sm font-semibold text-foreground">{formatNextSession(nextSession)}</p>
         </div>
         
         {/* Footer */}
@@ -123,6 +124,11 @@ const SessionCard = ({
             <Button className="bg-secondary text-muted-foreground rounded-full font-semibold gap-2 cursor-default hover:bg-secondary" disabled>
               <CheckCircle className="h-4 w-4" />
               Booked
+            </Button>
+          ) : spotsLeft === 0 ? (
+            <Button className="bg-preply-pink-light text-muted-foreground rounded-full font-semibold gap-2 cursor-default hover:bg-preply-pink-light" disabled>
+              <Ban className="h-4 w-4" />
+              Sold out
             </Button>
           ) : (
             <Button className="bg-preply-pink text-foreground hover:bg-preply-pink/90 rounded-full font-semibold gap-2">
