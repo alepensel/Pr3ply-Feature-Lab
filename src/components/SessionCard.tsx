@@ -1,4 +1,4 @@
-import { Clock, Users, Globe, Star, Zap, Pencil, Trash2, Eye } from "lucide-react";
+import { Clock, Users, Globe, Star, Zap, Pencil, Trash2, Eye, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
