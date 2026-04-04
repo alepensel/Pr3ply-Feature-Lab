@@ -24,6 +24,7 @@ const SessionCard = ({
   nextSession,
   description,
   isTutor,
+  isBooked,
   onEdit,
   onDelete,
 }: SessionCardProps) => {
