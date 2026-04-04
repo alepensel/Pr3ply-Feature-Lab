@@ -39,7 +39,7 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
   const [duration, setDuration] = useState("45 min");
   const [price, setPrice] = useState("16");
   const [maxSpots, setMaxSpots] = useState("2");
-  const [meetLink, setMeetLink] = useState("");
+  const [meetLink] = useState("");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
   const [scheduledTime, setScheduledTime] = useState("14:00");
   const [nextSessionLabel, setNextSessionLabel] = useState("");
