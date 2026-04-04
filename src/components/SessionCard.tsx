@@ -78,7 +78,7 @@ const SessionCard = ({
         {/* Next session */}
         <div className="mb-4 rounded-lg bg-secondary p-3">
           <p className="text-xs text-muted-foreground">Next session</p>
-          <p className="text-sm font-semibold text-foreground">{nextSession}</p>
+          <p className="text-sm font-semibold text-foreground">{formatNextSession(nextSession)}</p>
         </div>
         
         {/* Footer */}
