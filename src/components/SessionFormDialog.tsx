@@ -96,7 +96,7 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
     const scheduled = new Date(scheduledDate);
     scheduled.setHours(h, m, 0, 0);
 
-    const label = nextSessionLabel.trim() || format(scheduled, "EEE, h:mm a");
+    const label = format(scheduled, "EEE, h:mm a");
 
     const row = {
       tutor_id: user.id,
@@ -108,7 +108,7 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
       duration,
       price: parseFloat(price) || 16,
       max_spots: parseInt(maxSpots) || 2,
-      meet_link: meetLink.trim(),
+      meet_link: "",
       scheduled_at: scheduled.toISOString(),
       next_session: label,
     };
