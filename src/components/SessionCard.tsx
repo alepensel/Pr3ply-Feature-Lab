@@ -119,18 +119,16 @@ const SessionCard = ({
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
+          ) : isBooked ? (
+            <Button className="bg-secondary text-muted-foreground rounded-full font-semibold gap-2 cursor-default hover:bg-secondary" disabled>
+              <CheckCircle className="h-4 w-4" />
+              Booked
+            </Button>
           ) : (
-            {isBooked ? (
-              <Button className="bg-secondary text-muted-foreground rounded-full font-semibold gap-2 cursor-default hover:bg-secondary" disabled>
-                <CheckCircle className="h-4 w-4" />
-                Booked
-              </Button>
-            ) : (
-              <Button className="bg-preply-pink text-foreground hover:bg-preply-pink/90 rounded-full font-semibold gap-2">
-                <Zap className="h-4 w-4 fill-current" />
-                Book lesson
-              </Button>
-            )}
+            <Button className="bg-preply-pink text-foreground hover:bg-preply-pink/90 rounded-full font-semibold gap-2">
+              <Zap className="h-4 w-4 fill-current" />
+              Book lesson
+            </Button>
           )}
         </div>
       </div>
