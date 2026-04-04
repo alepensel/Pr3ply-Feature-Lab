@@ -213,7 +213,7 @@ const SessionDetail = () => {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">Next session</span>
                   </div>
-                  <p className="text-base font-bold text-foreground mt-1">{session.nextSession}</p>
+                  <p className="text-base font-bold text-foreground mt-1">{formatNextSession(session.nextSession)}</p>
                 </div>
 
                 <div className="flex items-center justify-center gap-1.5 mb-3 text-sm text-muted-foreground">
