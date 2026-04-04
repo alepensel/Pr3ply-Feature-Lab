@@ -231,18 +231,6 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
             </div>
           </div>
 
-          {/* Display label */}
-          <div>
-            <Label>Display label (optional)</Label>
-            <Input value={nextSessionLabel} onChange={(e) => setNextSessionLabel(e.target.value)} placeholder="e.g. Tomorrow, 2:00 PM" />
-            <p className="text-xs text-muted-foreground mt-1">Shown on the card. Auto-generated if empty.</p>
-          </div>
-
-          {/* Meet link */}
-          <div>
-            <Label>Meeting link</Label>
-            <Input value={meetLink} onChange={(e) => setMeetLink(e.target.value)} placeholder="https://meet.google.com/..." />
-          </div>
 
           <Button onClick={handleSave} disabled={saving} className="w-full bg-preply-pink text-foreground hover:bg-preply-pink/90 font-semibold">
             {saving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Saving...</> : session ? "Update Session" : "Create Session"}
