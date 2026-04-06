@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { Session } from "@/hooks/useSessions";
 
-const THEMES = ["Travel", "Workplace", "Social", "Academic", "Daily Life"];
+const DEFAULT_THEMES = ["Travel", "Workplace", "Social", "Academic", "Daily Life"];
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const DURATIONS = ["30 min", "45 min", "60 min", "90 min"];
 
