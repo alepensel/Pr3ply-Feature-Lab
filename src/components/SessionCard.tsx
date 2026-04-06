@@ -94,6 +94,14 @@ const SessionCard = ({
           {isTutor ? (
             <div className="flex items-center gap-2">
               <Button
+                size="sm"
+                className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/session/${id}/room`); }}
+              >
+                <Zap className="h-3.5 w-3.5 fill-current" />
+                Join
+              </Button>
+              <Button
                 variant="outline"
                 size="sm"
                 className="gap-1.5"
