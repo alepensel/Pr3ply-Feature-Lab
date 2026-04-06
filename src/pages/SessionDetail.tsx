@@ -27,6 +27,7 @@ const SessionDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { session, loading: sessionLoading } = useSession(id);
+  const { isTutor } = useUserRole();
   const [isBooked, setIsBooked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [checkingBooking, setCheckingBooking] = useState(true);
