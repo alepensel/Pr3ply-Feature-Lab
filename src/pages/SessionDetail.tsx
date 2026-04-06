@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useSession } from "@/hooks/useSessions";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ const SessionDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { session, loading: sessionLoading } = useSession(id);
+  const { isTutor } = useUserRole();
   const [isBooked, setIsBooked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [checkingBooking, setCheckingBooking] = useState(true);
@@ -223,7 +225,15 @@ const SessionDetail = () => {
               </div>
 
               <div>
-                {checkingBooking ? (
+                {isTutor && session.tutor_id === user?.id ? (
+                  <Button
+                    onClick={() => navigate(`/session/${session.id}/room`)}
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-full py-2.5 text-base font-semibold gap-2"
+                  >
+                    <Zap className="h-5 w-5 fill-current" />
+                    Join Session
+                  </Button>
+                ) : checkingBooking ? (
                   <Button disabled className="w-full rounded-full py-2.5 text-sm font-semibold">
                     Loading...
                   </Button>
