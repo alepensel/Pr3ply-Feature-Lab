@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { Session } from "@/hooks/useSessions";
 
-const THEMES = ["Travel", "Workplace", "Social", "Academic", "Daily Life"];
+const DEFAULT_THEMES = ["Travel", "Workplace", "Social", "Academic", "Daily Life"];
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const DURATIONS = ["30 min", "45 min", "60 min", "90 min"];
 
@@ -32,6 +32,21 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
   const [saving, setSaving] = useState(false);
 
   const [theme, setTheme] = useState("Travel");
+  const [categories, setCategories] = useState<string[]>(DEFAULT_THEMES);
+  const [newCategory, setNewCategory] = useState("");
+  const [showNewCategory, setShowNewCategory] = useState(false);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase.from("sessions").select("theme");
+      if (data) {
+        const dbThemes = [...new Set(data.map((s) => s.theme))];
+        const merged = [...new Set([...DEFAULT_THEMES, ...dbThemes])].sort();
+        setCategories(merged);
+      }
+    };
+    fetchCategories();
+  }, []);
   const [scenario, setScenario] = useState("");
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState("English");
@@ -150,12 +165,44 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
           {/* Theme */}
           <div>
             <Label>Category</Label>
-            <Select value={theme} onValueChange={setTheme}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {THEMES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={theme} onValueChange={(v) => { if (v === "__new__") { setShowNewCategory(true); } else { setTheme(v); setShowNewCategory(false); } }}>
+                <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {categories.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  <SelectItem value="__new__" className="text-primary font-medium">
+                    <span className="flex items-center gap-1"><Plus className="h-3 w-3" /> New category</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {showNewCategory && (
+              <div className="flex gap-2 mt-2">
+                <Input
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  placeholder="Type new category name"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    const trimmed = newCategory.trim();
+                    if (!trimmed) return;
+                    if (!categories.includes(trimmed)) {
+                      setCategories((prev) => [...prev, trimmed].sort());
+                    }
+                    setTheme(trimmed);
+                    setNewCategory("");
+                    setShowNewCategory(false);
+                  }}
+                  className="bg-primary text-primary-foreground"
+                >
+                  Add
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Title */}
