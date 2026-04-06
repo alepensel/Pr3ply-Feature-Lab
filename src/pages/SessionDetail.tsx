@@ -225,7 +225,7 @@ const SessionDetail = () => {
               </div>
 
               <div>
-                {isTutor && session.tutor.id === user?.id ? (
+                {isTutor && session.tutor_id === user?.id ? (
                   <Button
                     onClick={() => navigate(`/session/${session.id}/room`)}
                     className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-full py-2.5 text-base font-semibold gap-2"
