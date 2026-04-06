@@ -165,12 +165,44 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
           {/* Theme */}
           <div>
             <Label>Category</Label>
-            <Select value={theme} onValueChange={setTheme}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {THEMES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={theme} onValueChange={(v) => { if (v === "__new__") { setShowNewCategory(true); } else { setTheme(v); setShowNewCategory(false); } }}>
+                <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {categories.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  <SelectItem value="__new__" className="text-primary font-medium">
+                    <span className="flex items-center gap-1"><Plus className="h-3 w-3" /> New category</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {showNewCategory && (
+              <div className="flex gap-2 mt-2">
+                <Input
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  placeholder="Type new category name"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    const trimmed = newCategory.trim();
+                    if (!trimmed) return;
+                    if (!categories.includes(trimmed)) {
+                      setCategories((prev) => [...prev, trimmed].sort());
+                    }
+                    setTheme(trimmed);
+                    setNewCategory("");
+                    setShowNewCategory(false);
+                  }}
+                  className="bg-primary text-primary-foreground"
+                >
+                  Add
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Title */}
