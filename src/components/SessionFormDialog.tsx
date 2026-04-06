@@ -32,6 +32,21 @@ const SessionFormDialog = ({ open, onOpenChange, session, onSaved }: Props) => {
   const [saving, setSaving] = useState(false);
 
   const [theme, setTheme] = useState("Travel");
+  const [categories, setCategories] = useState<string[]>(DEFAULT_THEMES);
+  const [newCategory, setNewCategory] = useState("");
+  const [showNewCategory, setShowNewCategory] = useState(false);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase.from("sessions").select("theme");
+      if (data) {
+        const dbThemes = [...new Set(data.map((s) => s.theme))];
+        const merged = [...new Set([...DEFAULT_THEMES, ...dbThemes])].sort();
+        setCategories(merged);
+      }
+    };
+    fetchCategories();
+  }, []);
   const [scenario, setScenario] = useState("");
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState("English");
