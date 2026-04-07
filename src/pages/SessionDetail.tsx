@@ -276,7 +276,7 @@ const SessionDetail = () => {
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-3 flex-1">
+          <div className="grid gap-4 lg:grid-cols-3 items-start">
             <div className="rounded-xl border border-border bg-card p-4">
               <h2 className="text-sm font-bold text-foreground mb-2">Your tutor</h2>
               <div className="flex items-center gap-3">
