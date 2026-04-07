@@ -14,7 +14,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 flex flex-col">
         {user ? (
           <SessionsGrid />
         ) : (
