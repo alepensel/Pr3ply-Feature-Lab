@@ -36,6 +36,7 @@ export const useSessions = () => {
     const { data } = await supabase
       .from("sessions")
       .select("*")
+      .gte("scheduled_at", new Date().toISOString())
       .order("scheduled_at", { ascending: true });
 
     if (data) {
