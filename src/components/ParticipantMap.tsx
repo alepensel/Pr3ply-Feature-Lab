@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { MapPin } from "lucide-react";
-import { WORLD_MAP_PATH } from "@/data/worldMapPath";
+import worldMapImg from "@/assets/world-map.png";
 
 const COUNTRY_COORDS: Record<string, [number, number]> = {
   "Afghanistan": [33, 65], "Albania": [41, 20], "Algeria": [28, 3], "Andorra": [42.5, 1.5],
@@ -61,11 +61,14 @@ const COUNTRY_COORDS: Record<string, [number, number]> = {
   "Vietnam": [16, 108], "Yemen": [15, 48], "Zambia": [-15, 28], "Zimbabwe": [-20, 30],
 };
 
-function toSVG(lat: number, lng: number): [number, number] {
-  const x = ((lng + 180) / 360) * 800;
-  const latRad = (lat * Math.PI) / 180;
-  const mercN = Math.log(Math.tan(Math.PI / 4 + latRad / 2));
-  const y = 250 - (mercN / Math.PI) * 250;
+/* Convert lat/lng → pixel position relative to the map image.
+   The image is a simple equirectangular-ish world map (roughly -180..180 lng, -60..85 lat visible). */
+function toPercent(lat: number, lng: number): [number, number] {
+  // X: longitude -180..180 → 0..100%
+  const x = ((lng + 180) / 360) * 100;
+  // Y: latitude ~85..-60 → 0..100% (top to bottom)
+  const latClamped = Math.max(-60, Math.min(85, lat));
+  const y = ((85 - latClamped) / (85 + 60)) * 100;
   return [x, y];
 }
 
@@ -82,7 +85,7 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
       .map((c) => {
         const coords = COUNTRY_COORDS[c];
         if (!coords) return null;
-        const [x, y] = toSVG(coords[0], coords[1]);
+        const [x, y] = toPercent(coords[0], coords[1]);
         return { country: c, x, y, isTutor: c === tutorCountry };
       })
       .filter(Boolean) as { country: string; x: number; y: number; isTutor: boolean }[];
@@ -106,61 +109,70 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
         <MapPin className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-bold text-foreground">Connected across the world</h2>
       </div>
-      <div className="flex-1 flex items-center">
-        <svg viewBox="0 0 800 450" className="w-full h-auto" style={{ maxHeight: 200 }}>
-          {/* Accurate world map from Natural Earth 110m data */}
-          <path
-            d={WORLD_MAP_PATH}
-            className="fill-muted/50 stroke-border/40"
-            strokeWidth="0.5"
-            fillRule="evenodd"
+      <div className="flex-1 flex items-center justify-center">
+        <div className="relative w-full" style={{ maxHeight: 200 }}>
+          <img
+            src={worldMapImg}
+            alt="World map"
+            className="w-full h-auto opacity-30 grayscale"
+            style={{ maxHeight: 200, objectFit: "contain" }}
           />
-
-          {/* Connection lines from tutor to students */}
-          {tutorPoint &&
-            points
-              .filter((p) => !p.isTutor)
-              .map((p) => (
-                <line
-                  key={`line-${p.country}`}
-                  x1={tutorPoint.x}
-                  y1={tutorPoint.y}
-                  x2={p.x}
-                  y2={p.y}
-                  className="stroke-primary/25"
-                  strokeWidth="1.5"
-                  strokeDasharray="6 4"
-                />
-              ))}
-
-          {/* Pin markers */}
+          {/* SVG overlay for pins and lines */}
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            className="absolute inset-0 w-full h-full"
+            style={{ maxHeight: 200 }}
+          >
+            {/* Connection lines */}
+            {tutorPoint &&
+              points
+                .filter((p) => !p.isTutor)
+                .map((p) => (
+                  <line
+                    key={`line-${p.country}`}
+                    x1={`${tutorPoint.x}`}
+                    y1={`${tutorPoint.y}`}
+                    x2={`${p.x}`}
+                    y2={`${p.y}`}
+                    className="stroke-primary/30"
+                    strokeWidth="0.3"
+                    strokeDasharray="1 0.8"
+                  />
+                ))}
+          </svg>
+          {/* Pin markers as absolute-positioned elements for crisp rendering */}
           {points.map((p, idx) => {
             const color = pinColors[idx % pinColors.length];
             return (
-              <g key={p.country}>
-                <path
-                  d={`M${p.x},${p.y - 3} 
-                     C${p.x - 8},${p.y - 12} ${p.x - 8},${p.y - 22} ${p.x},${p.y - 26}
-                     C${p.x + 8},${p.y - 22} ${p.x + 8},${p.y - 12} ${p.x},${p.y - 3}Z`}
-                  fill={color}
-                  stroke="white"
-                  strokeWidth="1.5"
-                />
-                <circle cx={p.x} cy={p.y - 16} r="4" fill="white" />
-                <text
-                  x={p.x}
-                  y={p.y + 10}
-                  textAnchor="middle"
-                  className="fill-muted-foreground"
-                  fontSize="8"
-                  fontWeight="500"
+              <div
+                key={p.country}
+                className="absolute flex flex-col items-center"
+                style={{
+                  left: `${p.x}%`,
+                  top: `${p.y}%`,
+                  transform: "translate(-50%, -100%)",
+                }}
+              >
+                <svg width="16" height="22" viewBox="0 0 16 22" className="drop-shadow-sm">
+                  <path
+                    d="M8,21 C8,21 1,13 1,8 A7,7 0 1,1 15,8 C15,13 8,21 8,21Z"
+                    fill={color}
+                    stroke="white"
+                    strokeWidth="1.5"
+                  />
+                  <circle cx="8" cy="8" r="3" fill="white" />
+                </svg>
+                <span
+                  className="text-muted-foreground font-medium whitespace-nowrap mt-0.5"
+                  style={{ fontSize: "7px" }}
                 >
                   {p.country}
-                </text>
-              </g>
+                </span>
+              </div>
             );
           })}
-        </svg>
+        </div>
       </div>
     </div>
   );
