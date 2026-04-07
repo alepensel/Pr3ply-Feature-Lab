@@ -1,32 +1,31 @@
 import { isToday, isTomorrow, parse, format } from "date-fns";
 
 /**
- * Formats a next_session string like "Sun, Apr 6 · 6:30 PM"
- * into "Sunday, 6:30 PM (Tomorrow)" style.
- * Falls back to the original string if parsing fails.
+ * Formats a next_session string into:
+ * "April 8, Wednesday - 18:30 (Tomorrow)"
  */
 export function formatNextSession(raw: string): string {
   if (!raw) return raw;
 
   try {
-    // Try parsing common formats from the DB
-    // The stored format is typically like "Sun, Apr 6 · 6:30 PM" or a date string
-    // First try ISO format
     let date = new Date(raw);
 
-    // If invalid, try parsing the display format
     if (isNaN(date.getTime())) {
-      // Try "Sun, Apr 6 · 6:30 PM" style
       const cleaned = raw.replace("·", "").replace(/\s+/g, " ").trim();
       date = parse(cleaned, "EEE, MMM d h:mm a", new Date());
     }
 
     if (isNaN(date.getTime())) {
-      return raw; // fallback
+      // Try "EEE, h:mm a" (no day number)
+      const cleaned = raw.replace("·", "").replace(/\s+/g, " ").trim();
+      date = parse(cleaned, "EEE, h:mm a", new Date());
     }
 
+    if (isNaN(date.getTime())) return raw;
+
+    const monthDay = format(date, "MMMM d");
     const dayName = format(date, "EEEE");
-    const time = format(date, "h:mm a");
+    const time = format(date, "HH:mm");
 
     let label = "";
     if (isToday(date)) {
@@ -35,7 +34,7 @@ export function formatNextSession(raw: string): string {
       label = " (Tomorrow)";
     }
 
-    return `${dayName}, ${time}${label}`;
+    return `${monthDay}, ${dayName} - ${time}${label}`;
   } catch {
     return raw;
   }
