@@ -12,9 +12,9 @@ const Index = () => {
   const { user, loading } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main>
+      <main className="flex-1">
         {user ? (
           <SessionsGrid />
         ) : (
