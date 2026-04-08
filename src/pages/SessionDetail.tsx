@@ -54,21 +54,9 @@ const SessionDetail = () => {
   useEffect(() => {
     const fetchParticipants = async () => {
       if (!session) return;
-      const { data: bookings } = await supabase
-        .from("bookings")
-        .select("user_id")
-        .eq("session_id", session.id)
-        .eq("status", "confirmed");
-      if (!bookings || bookings.length === 0) {
-        setParticipants([]);
-        return;
-      }
-      const userIds = bookings.map((b) => b.user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, display_name, avatar_url, country")
-        .in("user_id", userIds);
-      setParticipants(profiles || []);
+      const { data } = await supabase
+        .rpc("session_participants", { _session_id: session.id });
+      setParticipants((data as Participant[]) || []);
     };
     fetchParticipants();
   }, [session, isBooked]);
