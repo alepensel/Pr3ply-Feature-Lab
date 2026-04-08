@@ -171,6 +171,15 @@ export type Database = {
           session_id: string
         }[]
       }
+      session_participants: {
+        Args: { _session_id: string }
+        Returns: {
+          avatar_url: string
+          country: string
+          display_name: string
+          user_id: string
+        }[]
+      }
       user_session_ids: { Args: { _user_id: string }; Returns: string[] }
     }
     Enums: {
