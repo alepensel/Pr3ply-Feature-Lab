@@ -62,13 +62,16 @@ const COUNTRY_COORDS: Record<string, [number, number]> = {
 };
 
 /* Convert lat/lng → pixel position relative to the map image.
-   The image is a simple equirectangular-ish world map (roughly -180..180 lng, -60..85 lat visible). */
+   The map image (740x493) is a cropped equirectangular projection.
+   Calibrated bounds based on visible coastlines. */
+const LNG_MIN = -168;
+const LNG_MAX = 190;
+const LAT_MAX = 83;
+const LAT_MIN = -58;
 function toPercent(lat: number, lng: number): [number, number] {
-  // X: longitude -180..180 → 0..100%
-  const x = ((lng + 180) / 360) * 100;
-  // Y: latitude ~85..-60 → 0..100% (top to bottom)
-  const latClamped = Math.max(-60, Math.min(85, lat));
-  const y = ((85 - latClamped) / (85 + 60)) * 100;
+  const x = ((lng - LNG_MIN) / (LNG_MAX - LNG_MIN)) * 100;
+  const latClamped = Math.max(LAT_MIN, Math.min(LAT_MAX, lat));
+  const y = ((LAT_MAX - latClamped) / (LAT_MAX - LAT_MIN)) * 100;
   return [x, y];
 }
 
@@ -94,14 +97,10 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
   if (points.length < 2) return null;
 
   const tutorPoint = points.find((p) => p.isTutor);
+  const studentPoints = points.filter((p) => !p.isTutor);
 
-  const pinColors = [
-    "hsl(var(--primary))",
-    "hsl(210, 70%, 50%)",
-    "hsl(175, 60%, 45%)",
-    "hsl(260, 55%, 55%)",
-    "hsl(330, 50%, 50%)",
-  ];
+  const TUTOR_COLOR = "hsl(var(--preply-pink))";
+  const STUDENT_COLOR = "hsl(0, 0%, 10%)";
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 h-full flex flex-col">
@@ -110,40 +109,50 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
         <h2 className="text-sm font-bold text-foreground">Connected across the world</h2>
       </div>
       <div className="flex-1 flex items-center justify-center">
-        <div className="relative w-full" style={{ maxHeight: 200 }}>
+        <div className="relative w-full" style={{ aspectRatio: "740 / 493" }}>
           <img
             src={worldMapImg}
             alt="World map"
-            className="w-full h-auto opacity-30 grayscale"
-            style={{ maxHeight: 200, objectFit: "contain" }}
+            className="absolute inset-0 w-full h-full opacity-30 grayscale"
           />
-          {/* SVG overlay for pins and lines */}
+          {/* SVG overlay for connection lines (triangle between all points) */}
           <svg
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
             className="absolute inset-0 w-full h-full"
-            style={{ maxHeight: 200 }}
           >
-            {/* Connection lines */}
             {tutorPoint &&
-              points
-                .filter((p) => !p.isTutor)
-                .map((p) => (
-                  <line
-                    key={`line-${p.country}`}
-                    x1={`${tutorPoint.x}`}
-                    y1={`${tutorPoint.y}`}
-                    x2={`${p.x}`}
-                    y2={`${p.y}`}
-                    className="stroke-primary/30"
-                    strokeWidth="0.3"
-                    strokeDasharray="1 0.8"
-                  />
-                ))}
+              studentPoints.map((p) => (
+                <line
+                  key={`line-tutor-${p.country}`}
+                  x1={tutorPoint.x}
+                  y1={tutorPoint.y}
+                  x2={p.x}
+                  y2={p.y}
+                  stroke={TUTOR_COLOR}
+                  strokeWidth="0.3"
+                  strokeDasharray="1 0.8"
+                />
+              ))}
+            {studentPoints.map((p, i) =>
+              studentPoints.slice(i + 1).map((q) => (
+                <line
+                  key={`line-${p.country}-${q.country}`}
+                  x1={p.x}
+                  y1={p.y}
+                  x2={q.x}
+                  y2={q.y}
+                  stroke="hsl(0, 0%, 10%)"
+                  strokeOpacity="0.4"
+                  strokeWidth="0.3"
+                  strokeDasharray="1 0.8"
+                />
+              ))
+            )}
           </svg>
-          {/* Pin markers as absolute-positioned elements for crisp rendering */}
-          {points.map((p, idx) => {
-            const color = pinColors[idx % pinColors.length];
+          {/* Pin markers */}
+          {points.map((p) => {
+            const color = p.isTutor ? TUTOR_COLOR : STUDENT_COLOR;
             return (
               <div
                 key={p.country}
