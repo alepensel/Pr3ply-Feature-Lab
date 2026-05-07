@@ -265,7 +265,7 @@ const SessionDetail = () => {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3 items-stretch">
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-xl border border-border bg-card p-4 flex flex-col">
               <h2 className="text-sm font-bold text-foreground mb-2">Your tutor</h2>
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12 border-2 border-primary">
@@ -286,7 +286,16 @@ const SessionDetail = () => {
                   </div>
                 </div>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground leading-relaxed line-clamp-3">{session.tutor.bio}</p>
+              <p
+                className="mt-2 text-xs text-muted-foreground leading-relaxed flex-1 min-h-0 overflow-hidden"
+                style={{
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 12,
+                }}
+              >
+                {session.tutor.bio}
+              </p>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-4">
