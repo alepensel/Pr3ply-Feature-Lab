@@ -11,7 +11,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Video, Users, Clock, ArrowLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const SessionRoom = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,8 +22,31 @@ const SessionRoom = () => {
   const navigate = useNavigate();
   const { session, loading } = useSession(id);
   const [inCall, setInCall] = useState(false);
+  const [authzChecked, setAuthzChecked] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   const channelName = `session-${id}`;
+
+  useEffect(() => {
+    const verifyAccess = async () => {
+      if (!user || !session || !id) return;
+      if (isTutor && session.tutor_id === user.id) {
+        setIsAuthorized(true);
+        setAuthzChecked(true);
+        return;
+      }
+      const { data } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("session_id", id)
+        .eq("status", "confirmed")
+        .maybeSingle();
+      setIsAuthorized(!!data);
+      setAuthzChecked(true);
+    };
+    verifyAccess();
+  }, [user, session, id, isTutor]);
 
   const displayName = useMemo(() => {
     if (profile?.first_name) {
@@ -31,7 +55,7 @@ const SessionRoom = () => {
     return user?.email?.split("@")[0] || "Student";
   }, [profile, user]);
 
-  if (loading) {
+  if (loading || (user && session && !authzChecked)) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -60,6 +84,11 @@ const SessionRoom = () => {
 
   if (!user) {
     navigate("/auth");
+    return null;
+  }
+
+  if (!isAuthorized) {
+    navigate(`/session/${id}`);
     return null;
   }
 
