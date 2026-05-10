@@ -154,7 +154,57 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_sessions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration: string | null
+          id: string | null
+          language: string | null
+          level: string | null
+          max_spots: number | null
+          next_session: string | null
+          price: number | null
+          scenario: string | null
+          scheduled_at: string | null
+          theme: string | null
+          tutor_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string | null
+          language?: string | null
+          level?: string | null
+          max_spots?: number | null
+          next_session?: string | null
+          price?: number | null
+          scenario?: string | null
+          scheduled_at?: string | null
+          theme?: string | null
+          tutor_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string | null
+          language?: string | null
+          level?: string | null
+          max_spots?: number | null
+          next_session?: string | null
+          price?: number | null
+          scenario?: string | null
+          scheduled_at?: string | null
+          theme?: string | null
+          tutor_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
