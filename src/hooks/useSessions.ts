@@ -34,7 +34,7 @@ export const useSessions = () => {
   const fetchSessions = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("sessions")
+      .from("public_sessions" as any)
       .select("*")
       .gte("scheduled_at", new Date().toISOString())
       .order("scheduled_at", { ascending: true });
@@ -56,6 +56,7 @@ export const useSessions = () => {
         const booked = bookingCounts[s.id] || 0;
         return {
           ...s,
+          meet_link: s.meet_link ?? "",
           tutor: defaultTutor,
           spotsLeft: Math.max(0, s.max_spots - booked),
           maxSpots: s.max_spots,
@@ -82,23 +83,25 @@ export const useSession = (id: string | undefined) => {
     const fetch = async () => {
       if (!id) { setLoading(false); return; }
       const { data } = await supabase
-        .from("sessions")
+        .from("public_sessions" as any)
         .select("*")
         .eq("id", id)
         .maybeSingle();
 
       if (data) {
+        const d: any = data;
         const { data: counts } = await supabase.rpc("session_booking_counts", {
-          _session_ids: [data.id],
+          _session_ids: [d.id],
         });
 
         const booked = counts?.[0]?.count ? Number(counts[0].count) : 0;
         setSession({
-          ...data,
+          ...d,
+          meet_link: d.meet_link ?? "",
           tutor: defaultTutor,
-          spotsLeft: Math.max(0, data.max_spots - booked),
-          maxSpots: data.max_spots,
-          nextSession: data.next_session,
+          spotsLeft: Math.max(0, d.max_spots - booked),
+          maxSpots: d.max_spots,
+          nextSession: d.next_session,
         });
       }
       setLoading(false);
