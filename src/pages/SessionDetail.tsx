@@ -53,13 +53,16 @@ const SessionDetail = () => {
 
   useEffect(() => {
     const fetchParticipants = async () => {
-      if (!session) return;
+      if (!session || !user) {
+        setParticipants([]);
+        return;
+      }
       const { data } = await supabase
         .rpc("session_participants", { _session_id: session.id });
       setParticipants((data as Participant[]) || []);
     };
     fetchParticipants();
-  }, [session, isBooked]);
+  }, [session, isBooked, user]);
 
   if (sessionLoading) {
     return (
