@@ -53,7 +53,7 @@ const SessionDetail = () => {
 
   useEffect(() => {
     const fetchParticipants = async () => {
-      if (!session || !user) {
+      if (!session) {
         setParticipants([]);
         return;
       }
@@ -62,7 +62,7 @@ const SessionDetail = () => {
       setParticipants((data as Participant[]) || []);
     };
     fetchParticipants();
-  }, [session, isBooked, user]);
+  }, [session, isBooked]);
 
   if (sessionLoading) {
     return (
@@ -133,7 +133,6 @@ const SessionDetail = () => {
   };
 
   const bookedCount = Math.max(0, session.maxSpots - session.spotsLeft);
-  const anonymousCount = Math.max(0, bookedCount - participants.length);
   const emptySlots = Math.max(0, session.spotsLeft);
 
   const practicePoints = [
@@ -347,20 +346,6 @@ const SessionDetail = () => {
                     </div>
                   );
                 })}
-
-                {Array.from({ length: anonymousCount }).map((_, i) => (
-                  <div key={`anon-${i}`} className="flex items-center gap-2.5 rounded-lg bg-secondary/50 p-2.5">
-                    <Avatar className="h-8 w-8 border-2 border-border">
-                      <AvatarFallback className="text-xs font-bold bg-secondary text-muted-foreground">
-                        ?
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-foreground truncate">Student</p>
-                      <p className="text-[10px] text-muted-foreground">Joined</p>
-                    </div>
-                  </div>
-                ))}
 
                 {Array.from({ length: emptySlots }).map((_, i) => (
                   <div key={`empty-${i}`} className="flex items-center gap-2.5 rounded-lg border-2 border-dashed border-border p-2.5">
