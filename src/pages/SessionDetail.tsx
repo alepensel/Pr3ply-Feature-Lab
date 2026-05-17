@@ -132,8 +132,9 @@ const SessionDetail = () => {
     toast.success("Booking cancelled");
   };
 
-  const filledSlots = participants.length;
-  const emptySlots = Math.max(0, session.maxSpots - filledSlots);
+  const bookedCount = Math.max(0, session.maxSpots - session.spotsLeft);
+  const anonymousCount = Math.max(0, bookedCount - participants.length);
+  const emptySlots = Math.max(0, session.spotsLeft);
 
   const practicePoints = [
     "Real-world vocabulary and expressions",
@@ -306,7 +307,7 @@ const SessionDetail = () => {
                 <h2 className="text-sm font-bold text-foreground">Who's joining</h2>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Users className="h-3.5 w-3.5" />
-                  <span>{filledSlots}/{session.maxSpots}</span>
+                  <span>{bookedCount}/{session.maxSpots}</span>
                 </div>
               </div>
 
@@ -347,6 +348,20 @@ const SessionDetail = () => {
                   );
                 })}
 
+                {Array.from({ length: anonymousCount }).map((_, i) => (
+                  <div key={`anon-${i}`} className="flex items-center gap-2.5 rounded-lg bg-secondary/50 p-2.5">
+                    <Avatar className="h-8 w-8 border-2 border-border">
+                      <AvatarFallback className="text-xs font-bold bg-secondary text-muted-foreground">
+                        ?
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground truncate">Student</p>
+                      <p className="text-[10px] text-muted-foreground">Joined</p>
+                    </div>
+                  </div>
+                ))}
+
                 {Array.from({ length: emptySlots }).map((_, i) => (
                   <div key={`empty-${i}`} className="flex items-center gap-2.5 rounded-lg border-2 border-dashed border-border p-2.5">
                     <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
@@ -360,12 +375,12 @@ const SessionDetail = () => {
                 ))}
               </div>
 
-              {filledSlots > 0 && emptySlots > 0 && !isBooked && (
+              {bookedCount > 0 && emptySlots > 0 && !isBooked && (
                 <div className="mt-2 rounded-lg bg-accent p-2 text-center">
                   <p className="text-xs font-medium text-accent-foreground">
-                    {filledSlots === 1
+                    {bookedCount === 1
                       ? "1 student joined — book your spot!"
-                      : `${filledSlots} students joined — book yours!`}
+                      : `${bookedCount} students joined — book yours!`}
                   </p>
                 </div>
               )}
