@@ -64,9 +64,12 @@ const COUNTRY_COORDS: Record<string, [number, number]> = {
 /* Convert lat/lng → pixel position relative to the map image.
    The map image (740x493) is a cropped equirectangular projection.
    Calibrated bounds based on visible coastlines. */
-const LNG_MIN = -168;
-const LNG_MAX = 190;
-const LAT_MAX = 83;
+/* Calibration tuned visually against the cropped silhouette map.
+   Latitude is non-linear on this artwork, so LAT_MAX is intentionally
+   pushed above 90 to compensate for the compressed northern hemisphere. */
+const LNG_MIN = -165;
+const LNG_MAX = 180;
+const LAT_MAX = 95;
 const LAT_MIN = -58;
 function toPercent(lat: number, lng: number): [number, number] {
   const x = ((lng - LNG_MIN) / (LNG_MAX - LNG_MIN)) * 100;
@@ -154,16 +157,19 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
           {points.map((p) => {
             const color = p.isTutor ? TUTOR_COLOR : STUDENT_COLOR;
             return (
-              <div
-                key={p.country}
-                className="absolute flex flex-col items-center"
-                style={{
-                  left: `${p.x}%`,
-                  top: `${p.y}%`,
-                  transform: "translate(-50%, -100%)",
-                }}
-              >
-                <svg width="16" height="22" viewBox="0 0 16 22" className="drop-shadow-sm">
+              <div key={p.country}>
+                {/* Pin: tip anchored exactly at (x%, y%) */}
+                <svg
+                  width="16"
+                  height="21"
+                  viewBox="0 0 16 21"
+                  className="absolute drop-shadow-sm"
+                  style={{
+                    left: `${p.x}%`,
+                    top: `${p.y}%`,
+                    transform: "translate(-50%, -100%)",
+                  }}
+                >
                   <path
                     d="M8,21 C8,21 1,13 1,8 A7,7 0 1,1 15,8 C15,13 8,21 8,21Z"
                     fill={color}
@@ -172,9 +178,15 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
                   />
                   <circle cx="8" cy="8" r="3" fill="white" />
                 </svg>
+                {/* Label: positioned independently below the pin tip */}
                 <span
-                  className="text-muted-foreground font-medium whitespace-nowrap mt-0.5"
-                  style={{ fontSize: "7px" }}
+                  className="absolute text-muted-foreground font-medium whitespace-nowrap"
+                  style={{
+                    left: `${p.x}%`,
+                    top: `${p.y}%`,
+                    transform: "translate(-50%, 2px)",
+                    fontSize: "7px",
+                  }}
                 >
                   {p.country}
                 </span>
