@@ -33,7 +33,7 @@ const SessionCard = ({
   const navigate = useNavigate();
 
   const cardContent = (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary hover:shadow-xl">
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary hover:shadow-xl">
       {/* Header with theme */}
       <div className="bg-preply-pink-light p-6">
         <Badge variant="secondary" className="mb-3 bg-background font-semibold">
@@ -44,7 +44,7 @@ const SessionCard = ({
       </div>
       
       {/* Content */}
-      <div className="p-6">
+      <div className="flex flex-1 flex-col p-6">
         {/* Meta info */}
         <div className="mb-4 flex flex-wrap gap-3">
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -83,7 +83,7 @@ const SessionCard = ({
         </div>
         
         {/* Footer */}
-        <div className="flex items-center justify-between">
+        <div className="mt-auto flex items-center justify-between">
           <div>
             <p className="text-2xl font-extrabold text-foreground">${price}</p>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -151,11 +151,11 @@ const SessionCard = ({
   );
 
   if (isTutor) {
-    return <div>{cardContent}</div>;
+    return <div className="h-full">{cardContent}</div>;
   }
 
   return (
-    <Link to={`/session/${id}`} className="block">
+    <Link to={`/session/${id}`} className="block h-full">
       {cardContent}
     </Link>
   );
