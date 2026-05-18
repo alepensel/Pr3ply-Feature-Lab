@@ -40,7 +40,7 @@ const SessionCard = ({
           {theme}
         </Badge>
         <h3 className="text-xl font-bold text-foreground">{scenario}</h3>
-        <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{description}</p>
+        <p className="mt-2 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{description}</p>
       </div>
       
       {/* Content */}
