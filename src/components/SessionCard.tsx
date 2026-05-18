@@ -151,11 +151,11 @@ const SessionCard = ({
   );
 
   if (isTutor) {
-    return <div>{cardContent}</div>;
+    return <div className="h-full">{cardContent}</div>;
   }
 
   return (
-    <Link to={`/session/${id}`} className="block">
+    <Link to={`/session/${id}`} className="block h-full">
       {cardContent}
     </Link>
   );
