@@ -24,6 +24,7 @@ const SessionCard = ({
   spotsLeft,
   nextSession,
   description,
+  scheduled_at,
   isTutor,
   isBooked,
   onEdit,
@@ -78,7 +79,7 @@ const SessionCard = ({
         {/* Next session */}
         <div className="mb-4 rounded-lg bg-secondary p-3">
           <p className="text-xs text-muted-foreground">Next session</p>
-          <p className="text-sm font-semibold text-foreground">{formatNextSession(nextSession)}</p>
+          <p className="text-sm font-semibold text-foreground">{formatNextSession(nextSession, scheduled_at)}</p>
         </div>
         
         {/* Footer */}
