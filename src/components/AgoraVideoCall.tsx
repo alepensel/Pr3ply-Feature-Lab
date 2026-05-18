@@ -8,16 +8,16 @@ import AgoraRTC, {
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, VideoIcon, VideoOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const APP_ID = "9c44f372ed44435fa2e6437a3dc76c8d";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AgoraVideoCallProps {
   channelName: string;
   displayName: string;
   onLeave: () => void;
+  sessionId: string;
 }
 
-const AgoraVideoCall = ({ channelName, displayName, onLeave }: AgoraVideoCallProps) => {
+const AgoraVideoCall = ({ channelName, displayName, onLeave, sessionId }: AgoraVideoCallProps) => {
   const clientRef = useRef<IAgoraRTCClient | null>(null);
   const localVideoRef = useRef<HTMLDivElement>(null);
   const [localTracks, setLocalTracks] = useState<{
@@ -62,7 +62,13 @@ const AgoraVideoCall = ({ channelName, displayName, onLeave }: AgoraVideoCallPro
       client.on("user-unpublished", handleUserUnpublished);
       client.on("user-left", handleUserLeft);
 
-      await client.join(APP_ID, channelName, null, null);
+      const { data, error } = await supabase.functions.invoke("agora-token", {
+        body: { sessionId },
+      });
+      if (error || !data?.token) {
+        throw new Error(error?.message || "Failed to get Agora token");
+      }
+      await client.join(data.appId, data.channelName, data.token, data.uid);
 
       const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
       setLocalTracks({ audio: audioTrack, video: videoTrack });
