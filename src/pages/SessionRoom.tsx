@@ -113,6 +113,7 @@ const SessionRoom = () => {
             <AgoraVideoCall
               channelName={channelName}
               displayName={displayName}
+              sessionId={id!}
               onLeave={() => setInCall(false)}
             />
           </div>
