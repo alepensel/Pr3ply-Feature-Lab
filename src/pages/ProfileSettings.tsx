@@ -49,7 +49,7 @@ const ENGLISH_LEVELS = [
 const ABOUT_ME_MAX = 350;
 
 const ProfileSettings = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { profile, loading, refetch } = useProfile();
   const { toast } = useToast();
@@ -75,7 +75,20 @@ const ProfileSettings = () => {
     }
   }, [profile]);
 
-  if (!user) { navigate("/auth"); return null; }
+  useEffect(() => {
+    if (!authLoading && !user) navigate("/auth");
+  }, [authLoading, user, navigate]);
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container py-20 text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+        </main>
+      </div>
+    );
+  }
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
