@@ -20,6 +20,7 @@ interface Participant {
   display_name: string | null;
   avatar_url: string | null;
   country: string | null;
+  current_country: string | null;
 }
 
 const SessionDetail = () => {
@@ -373,7 +374,7 @@ const SessionDetail = () => {
 
             <ParticipantMap
               tutorCountry={session.tutor.country}
-              participantCountries={participants.map((p) => p.country)}
+              participantCountries={participants.map((p) => p.current_country || p.country)}
             />
           </div>
         </div>
