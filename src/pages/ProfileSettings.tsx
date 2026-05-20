@@ -59,6 +59,7 @@ const ProfileSettings = () => {
   const [lastName, setLastName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [country, setCountry] = useState("");
+  const [currentCountry, setCurrentCountry] = useState("");
   const [englishLevel, setEnglishLevel] = useState("");
   const [aboutMe, setAboutMe] = useState("");
   const [saving, setSaving] = useState(false);
@@ -70,6 +71,7 @@ const ProfileSettings = () => {
       setLastName(profile.last_name || "");
       setAvatarUrl(profile.avatar_url);
       setCountry(profile.country || "");
+      setCurrentCountry((profile as any).current_country || "");
       setEnglishLevel(profile.english_level || "");
       setAboutMe(profile.about_me || "");
     }
@@ -129,6 +131,7 @@ const ProfileSettings = () => {
         display_name: displayName,
         avatar_url: avatarUrl,
         country: country || null,
+        current_country: currentCountry || null,
         english_level: englishLevel || null,
         about_me: aboutMe || null,
       } as any)
@@ -222,6 +225,21 @@ const ProfileSettings = () => {
               <SelectContent className="max-h-60">
                 {COUNTRIES.map(c => (
                   <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Current country */}
+          <div>
+            <Label className="text-sm font-medium">I'm currently living in</Label>
+            <Select value={currentCountry} onValueChange={setCurrentCountry}>
+              <SelectTrigger className="mt-1.5">
+                <SelectValue placeholder="Select your country" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {COUNTRIES.map(c => (
+                  <SelectItem key={`cur-${c}`} value={c}>{c}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
