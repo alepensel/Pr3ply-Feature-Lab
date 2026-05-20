@@ -229,6 +229,7 @@ export type Database = {
         Returns: {
           avatar_url: string
           country: string
+          current_country: string
           display_name: string
           user_id: string
         }[]
