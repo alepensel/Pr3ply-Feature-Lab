@@ -142,7 +142,9 @@ const SessionRoom = () => {
                         <AvatarFallback>{session.tutor.name[0]}</AvatarFallback>
                       </Avatar>
                       <div className="text-center">
-                        <p className="text-sm font-semibold">{session.tutor.name}</p>
+                        <p className="text-sm font-semibold">
+                          {session.tutor.name} {countryFlag(session.tutor.country) && <span>{countryFlag(session.tutor.country)}</span>}
+                        </p>
                         <Badge variant="outline" className="text-xs bg-preply-pink-light">Tutor (You)</Badge>
                       </div>
                     </div>
@@ -154,7 +156,9 @@ const SessionRoom = () => {
                           <AvatarFallback>{session.tutor.name[0]}</AvatarFallback>
                         </Avatar>
                         <div className="text-center">
-                          <p className="text-sm font-semibold">{session.tutor.name}</p>
+                          <p className="text-sm font-semibold">
+                            {session.tutor.name} {countryFlag(session.tutor.country) && <span>{countryFlag(session.tutor.country)}</span>}
+                          </p>
                           <Badge variant="outline" className="text-xs">Tutor</Badge>
                         </div>
                       </div>
@@ -168,6 +172,7 @@ const SessionRoom = () => {
                         <div className="text-center">
                           <p className="text-sm font-semibold">
                             {profile?.first_name ? `${profile.first_name} ${profile.last_name || ""}`.trim() : "You"}
+                            {countryFlag(profile?.country) && <> <span>{countryFlag(profile?.country)}</span></>}
                           </p>
                           <Badge variant="outline" className="text-xs bg-preply-pink-light">You</Badge>
                         </div>
