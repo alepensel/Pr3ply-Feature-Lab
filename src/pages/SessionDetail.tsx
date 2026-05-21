@@ -335,6 +335,13 @@ const SessionDetail = () => {
                   const isYou = p.user_id === user?.id;
                   const name = p.display_name || "Student";
                   const flag = countryFlag(p.country);
+                  const studentLabel = p.country && p.current_country
+                    ? `Student from ${p.country}, currently based in ${p.current_country}`
+                    : p.country
+                      ? `Student from ${p.country}`
+                      : p.current_country
+                        ? `Student currently based in ${p.current_country}`
+                        : "Student";
                   return (
                     <div key={p.user_id} className="flex items-center gap-2.5 rounded-lg bg-secondary/50 p-2.5">
                       <Avatar className="h-8 w-8 border-2 border-border">
@@ -348,7 +355,7 @@ const SessionDetail = () => {
                           {name} {flag && <span>{flag}</span>}
                           {isYou && <span className="ml-1 text-[10px] font-medium text-primary">(You)</span>}
                         </p>
-                        <p className="text-[10px] text-muted-foreground">Student</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{studentLabel}</p>
                       </div>
                     </div>
                   );
