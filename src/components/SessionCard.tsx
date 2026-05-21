@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { SessionWithTutor } from "@/hooks/useSessions";
 import { formatNextSession } from "@/lib/formatNextSession";
+import { countryFlag } from "@/lib/countryFlag";
 
 interface SessionCardProps extends SessionWithTutor {
   isTutor?: boolean;
@@ -68,7 +69,9 @@ const SessionCard = ({
             className="h-10 w-10 rounded-full object-cover"
           />
           <div>
-            <p className="text-sm font-semibold text-foreground">{tutor.name}</p>
+            <p className="text-sm font-semibold text-foreground">
+              {tutor.name} {countryFlag(tutor.country) && <span>{countryFlag(tutor.country)}</span>}
+            </p>
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 fill-primary text-primary" />
               <span className="text-xs text-muted-foreground">{tutor.rating} ({tutor.reviewCount} reviews)</span>
