@@ -82,10 +82,9 @@ const SessionParticipants = ({
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-lg font-bold text-foreground">{tutor.name}</p>
-            {countryFlag(tutor.country) && (
-              <span className="text-base mr-1">{countryFlag(tutor.country)}</span>
-            )}
+            <p className="text-lg font-bold text-foreground">
+              {tutor.name} {countryFlag(tutor.country) && <span>{countryFlag(tutor.country)}</span>}
+            </p>
             <p className="text-sm text-muted-foreground mb-1">
               From {tutor.country} · TEFL Certified
             </p>
