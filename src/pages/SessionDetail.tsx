@@ -14,6 +14,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
 import { formatNextSession } from "@/lib/formatNextSession";
+import { countryFlag } from "@/lib/countryFlag";
 
 interface Participant {
   user_id: string;
@@ -279,7 +280,9 @@ const SessionDetail = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-foreground">{session.tutor.name}</p>
+                  <p className="text-sm font-bold text-foreground">
+                    {session.tutor.name} {countryFlag(session.tutor.country) && <span>{countryFlag(session.tutor.country)}</span>}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {session.tutor.country} · TEFL Certified
                   </p>
@@ -320,7 +323,9 @@ const SessionDetail = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground truncate">{session.tutor.name}</p>
+                    <p className="text-xs font-semibold text-foreground truncate">
+                      {session.tutor.name} {countryFlag(session.tutor.country) && <span>{countryFlag(session.tutor.country)}</span>}
+                    </p>
                     <p className="text-[10px] text-muted-foreground">Tutor</p>
                   </div>
                   <Crown className="h-3.5 w-3.5 text-primary flex-shrink-0" />
@@ -329,6 +334,7 @@ const SessionDetail = () => {
                 {participants.map((p) => {
                   const isYou = p.user_id === user?.id;
                   const name = p.display_name || "Student";
+                  const flag = countryFlag(p.country);
                   return (
                     <div key={p.user_id} className="flex items-center gap-2.5 rounded-lg bg-secondary/50 p-2.5">
                       <Avatar className="h-8 w-8 border-2 border-border">
@@ -339,7 +345,7 @@ const SessionDetail = () => {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">
-                          {name}
+                          {name} {flag && <span>{flag}</span>}
                           {isYou && <span className="ml-1 text-[10px] font-medium text-primary">(You)</span>}
                         </p>
                         <p className="text-[10px] text-muted-foreground">Student</p>
