@@ -9,6 +9,7 @@ interface Participant {
   display_name: string | null;
   avatar_url: string | null;
   country: string | null;
+  current_country: string | null;
 }
 
 interface SessionParticipantsProps {
@@ -56,7 +57,7 @@ const SessionParticipants = ({
       const userIds = bookings.map((b) => b.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, avatar_url, country")
+        .select("user_id, display_name, avatar_url, country, current_country")
         .in("user_id", userIds);
 
       setParticipants(profiles || []);
@@ -138,6 +139,13 @@ const SessionParticipants = ({
             const name = p.display_name || "Student";
             const initials = name[0]?.toUpperCase() || "?";
             const flag = countryFlag(p.country);
+            const studentLabel = p.country && p.current_country
+              ? `Student from ${p.country}, currently based in ${p.current_country}`
+              : p.country
+                ? `Student from ${p.country}`
+                : p.current_country
+                  ? `Student currently based in ${p.current_country}`
+                  : "Student";
 
             return (
               <div key={p.user_id} className="flex items-center gap-3 rounded-xl bg-secondary/50 p-3">
@@ -152,7 +160,7 @@ const SessionParticipants = ({
                     {name} {flag && <span aria-label="country flag">{flag}</span>}
                     {isYou && <span className="ml-1.5 text-xs font-medium text-primary">(You)</span>}
                   </p>
-                  <p className="text-xs text-muted-foreground">Student</p>
+                  <p className="text-xs text-muted-foreground truncate">{studentLabel}</p>
                 </div>
               </div>
             );
