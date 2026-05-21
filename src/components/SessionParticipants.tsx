@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Users, UserPlus, Crown, Star } from "lucide-react";
+import { countryFlag } from "@/lib/countryFlag";
 
 interface Participant {
   user_id: string;
   display_name: string | null;
   avatar_url: string | null;
+  country: string | null;
 }
 
 interface SessionParticipantsProps {
@@ -54,7 +56,7 @@ const SessionParticipants = ({
       const userIds = bookings.map((b) => b.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, avatar_url")
+        .select("user_id, display_name, avatar_url, country")
         .in("user_id", userIds);
 
       setParticipants(profiles || []);
@@ -80,7 +82,9 @@ const SessionParticipants = ({
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-lg font-bold text-foreground">{tutor.name}</p>
+            <p className="text-lg font-bold text-foreground">
+              {tutor.name} {countryFlag(tutor.country) && <span>{countryFlag(tutor.country)}</span>}
+            </p>
             <p className="text-sm text-muted-foreground mb-1">
               From {tutor.country} · TEFL Certified
             </p>
@@ -133,6 +137,7 @@ const SessionParticipants = ({
             const isYou = p.user_id === currentUserId;
             const name = p.display_name || "Student";
             const initials = name[0]?.toUpperCase() || "?";
+            const flag = countryFlag(p.country);
 
             return (
               <div key={p.user_id} className="flex items-center gap-3 rounded-xl bg-secondary/50 p-3">
@@ -144,7 +149,7 @@ const SessionParticipants = ({
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">
-                    {name}
+                    {name} {flag && <span aria-label="country flag">{flag}</span>}
                     {isYou && <span className="ml-1.5 text-xs font-medium text-primary">(You)</span>}
                   </p>
                   <p className="text-xs text-muted-foreground">Student</p>
