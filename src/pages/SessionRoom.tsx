@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { countryFlag } from "@/lib/countryFlag";
 
 const SessionRoom = () => {
   const { id } = useParams<{ id: string }>();
