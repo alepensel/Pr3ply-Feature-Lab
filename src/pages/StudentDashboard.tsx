@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, Video, Loader2 } from "lucide-react";
+import { countryFlag } from "@/lib/countryFlag";
 
 interface Booking {
   id: string;
@@ -141,7 +142,9 @@ const StudentDashboard = () => {
                         alt={session.tutor.name}
                         className="h-8 w-8 rounded-full object-cover"
                       />
-                      <span className="font-medium">{session.tutor.name}</span>
+                      <span className="font-medium">
+                        {session.tutor.name} {countryFlag(session.tutor.country) && <span>{countryFlag(session.tutor.country)}</span>}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
