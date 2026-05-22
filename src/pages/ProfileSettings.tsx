@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,8 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, ArrowLeft, Loader2 } from "lucide-react";
+import { Camera, ArrowLeft, Loader2, User, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import CalendarSettings from "@/components/CalendarSettings";
 
 const COUNTRIES = [
   "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria",
@@ -51,6 +53,13 @@ const ABOUT_ME_MAX = 350;
 const ProfileSettings = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") === "calendar" ? "calendar" : "account";
+  const setTab = (t: "account" | "calendar") => {
+    const next = new URLSearchParams(searchParams);
+    if (t === "account") next.delete("tab"); else next.set("tab", t);
+    setSearchParams(next, { replace: true });
+  };
   const { profile, loading, refetch } = useProfile();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -159,18 +168,51 @@ const ProfileSettings = () => {
 
   const initials = [firstName, lastName].map(n => n?.[0] || "").join("").toUpperCase() || "?";
 
+  const SIDEBAR_ITEMS: { id: "account" | "calendar"; label: string; icon: typeof User }[] = [
+    { id: "account", label: "Account", icon: User },
+    { id: "calendar", label: "Calendar", icon: Calendar },
+  ];
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="flex-1 container py-8 md:py-16 max-w-xl mx-auto">
+      <main className="flex-1 container py-8 md:py-12 max-w-5xl mx-auto">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 gap-2 text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
 
-        <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-8">Account Settings</h1>
+        <div className="grid gap-8 md:grid-cols-[220px_1fr]">
+          {/* Sidebar */}
+          <nav className="flex md:flex-col gap-1 md:gap-0.5 md:border-r md:pr-4">
+            {SIDEBAR_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const active = tab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setTab(item.id)}
+                  className={cn(
+                    "relative flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-left transition-colors w-full",
+                    active ? "text-foreground bg-secondary/60" : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                  )}
+                >
+                  {active && <span className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-preply-pink rounded-r-full" />}
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
 
-        <div className="space-y-8">
+          {/* Content */}
+          <div>
+            {tab === "calendar" ? (
+              <CalendarSettings />
+            ) : (
+              <>
+                <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-8">Account Settings</h1>
+                <div className="space-y-8 max-w-xl">
           {/* Avatar */}
           <div>
             <Label className="text-sm font-medium text-muted-foreground mb-3 block">Profile image</Label>
@@ -282,6 +324,10 @@ const ProfileSettings = () => {
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Save changes
           </Button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </main>
       <Footer />
