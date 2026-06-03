@@ -125,6 +125,228 @@ export type Database = {
         }
         Relationships: []
       }
+      session_audio_chunks: {
+        Row: {
+          chunk_index: number
+          created_at: string
+          duration_ms: number | null
+          id: string
+          path: string
+          session_id: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          chunk_index: number
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          path: string
+          session_id: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          chunk_index?: number
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          path?: string
+          session_id?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_audio_chunks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "public_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_audio_chunks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_feedback: {
+        Row: {
+          created_at: string
+          report: Json
+          score: number | null
+          session_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          report: Json
+          score?: number | null
+          session_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          report?: Json
+          score?: number | null
+          session_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_feedback_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "public_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_feedback_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_roleplay_prompts: {
+        Row: {
+          created_at: string
+          id: string
+          model: string | null
+          prompts: Json
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          model?: string | null
+          prompts: Json
+          session_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          model?: string | null
+          prompts?: Json
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_roleplay_prompts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "public_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_roleplay_prompts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_room_state: {
+        Row: {
+          current_prompt_index: number
+          current_speaker_id: string | null
+          is_paused: boolean
+          session_ended: boolean
+          session_id: string
+          turn_duration_seconds: number
+          turn_started_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          current_prompt_index?: number
+          current_speaker_id?: string | null
+          is_paused?: boolean
+          session_ended?: boolean
+          session_id: string
+          turn_duration_seconds?: number
+          turn_started_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          current_prompt_index?: number
+          current_speaker_id?: string | null
+          is_paused?: boolean
+          session_ended?: boolean
+          session_id?: string
+          turn_duration_seconds?: number
+          turn_started_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_room_state_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "public_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_room_state_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_transcripts: {
+        Row: {
+          created_at: string
+          segments: Json | null
+          session_id: string
+          text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          segments?: Json | null
+          session_id: string
+          text?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          segments?: Json | null
+          session_id?: string
+          text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_transcripts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "public_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_transcripts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
           created_at: string
@@ -257,6 +479,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_session_participant: {
+        Args: { _session_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_session_tutor: {
+        Args: { _session_id: string; _user_id: string }
         Returns: boolean
       }
       session_booking_counts: {

@@ -5,15 +5,17 @@ import { useSession } from "@/hooks/useSessions";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AgoraVideoCall from "@/components/AgoraVideoCall";
+import LearningRail from "@/components/LearningRail";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Video, Users, Clock, ArrowLeft, Loader2 } from "lucide-react";
+import { Video, Users, Clock, ArrowLeft, Loader2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { countryFlag } from "@/lib/countryFlag";
+import { useSessionRecording } from "@/hooks/useSessionRecording";
 
 const SessionRoom = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +29,12 @@ const SessionRoom = () => {
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   const channelName = `session-${id}`;
+
+  const { recording } = useSessionRecording({
+    sessionId: id,
+    userId: user?.id,
+    enabled: inCall,
+  });
 
   useEffect(() => {
     const verifyAccess = async () => {
@@ -105,18 +113,33 @@ const SessionRoom = () => {
                   {session.theme}
                 </Badge>
                 <span className="text-sm font-medium">{session.scenario}</span>
+                {recording && (
+                  <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground" title="Audio is captured to generate your post-session feedback">
+                    <Circle className="h-2 w-2 fill-destructive text-destructive animate-pulse" />
+                    Recording for feedback
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Users className="h-4 w-4" />
                 <span>{session.maxSpots} participants</span>
               </div>
             </div>
-            <AgoraVideoCall
-              channelName={channelName}
-              displayName={displayName}
-              sessionId={id!}
-              onLeave={() => setInCall(false)}
-            />
+            <div className="flex-1 flex flex-col md:flex-row min-h-0">
+              <div className="flex-1 min-h-0 flex flex-col">
+                <AgoraVideoCall
+                  channelName={channelName}
+                  displayName={displayName}
+                  sessionId={id!}
+                  onLeave={() => setInCall(false)}
+                />
+              </div>
+              <LearningRail
+                sessionId={id!}
+                isTutor={isTutor && session.tutor_id === user.id}
+                tutor={{ id: session.tutor_id, name: session.tutor.name, avatar: session.tutor.avatar }}
+              />
+            </div>
           </div>
         ) : (
           <div className="container py-8 md:py-16 max-w-3xl mx-auto">

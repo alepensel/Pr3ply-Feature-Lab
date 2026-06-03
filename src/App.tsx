@@ -11,6 +11,7 @@ import SessionRoom from "./pages/SessionRoom";
 import StudentDashboard from "./pages/StudentDashboard";
 import TutorDashboard from "./pages/TutorDashboard";
 import ProfileSettings from "./pages/ProfileSettings";
+import SessionFeedback from "./pages/SessionFeedback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/session/:id" element={<SessionDetail />} />
             <Route path="/session/:id/room" element={<SessionRoom />} />
+            <Route path="/session/:id/feedback" element={<SessionFeedback />} />
             <Route path="/dashboard" element={<StudentDashboard />} />
             <Route path="/tutor-dashboard" element={<TutorDashboard />} />
             <Route path="/profile" element={<ProfileSettings />} />
