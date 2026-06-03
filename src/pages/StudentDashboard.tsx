@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users, Video, Loader2 } from "lucide-react";
+import { Calendar, Clock, Users, Video, Loader2, Sparkles } from "lucide-react";
 import { countryFlag } from "@/lib/countryFlag";
 
 interface Booking {
@@ -15,6 +15,18 @@ interface Booking {
   session_id: string;
   status: string;
   created_at: string;
+}
+
+interface FeedbackEntry {
+  session_id: string;
+  score: number | null;
+  report: { headline?: string } | null;
+  session: {
+    id: string;
+    theme: string;
+    scenario: string;
+    scheduled_at: string;
+  } | null;
 }
 
 const useNow = (intervalMs = 30_000) => {
@@ -48,6 +60,7 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
   const { sessions } = useSessions();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [feedbackEntries, setFeedbackEntries] = useState<FeedbackEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const now = useNow();
 
@@ -69,6 +82,35 @@ const StudentDashboard = () => {
       setLoading(false);
     };
     if (user) fetchBookings();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchFeedback = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("session_feedback" as any)
+        .select("session_id, score, report")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false });
+      if (!data) return;
+      const rows = data as any[];
+      // Pull session info for each feedback row
+      const sessionIds = rows.map((r) => r.session_id);
+      if (sessionIds.length === 0) { setFeedbackEntries([]); return; }
+      const { data: sessionRows } = await supabase
+        .from("public_sessions" as any)
+        .select("id, theme, scenario, scheduled_at")
+        .in("id", sessionIds);
+      const sessionsById: Record<string, any> = {};
+      (sessionRows || []).forEach((s: any) => { sessionsById[s.id] = s; });
+      setFeedbackEntries(rows.map((r) => ({
+        session_id: r.session_id,
+        score: r.score,
+        report: r.report,
+        session: sessionsById[r.session_id] || null,
+      })));
+    };
+    if (user) fetchFeedback();
   }, [user]);
 
   const getSessionDetails = (sessionId: string) =>
@@ -95,6 +137,39 @@ const StudentDashboard = () => {
             View and manage your booked conversation sessions
           </p>
         </div>
+
+        {feedbackEntries.length > 0 && (
+          <section className="mb-10">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-5 w-5 text-preply-pink" />
+              <h2 className="text-xl font-bold">Your feedback</h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {feedbackEntries.map((f) => (
+                <Card key={f.session_id} className="overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="bg-secondary px-2 py-0.5 rounded text-xs font-medium">{f.session?.theme || "Session"}</span>
+                      {f.score != null && (
+                        <Badge className="bg-preply-pink text-foreground">{f.score}/10</Badge>
+                      )}
+                    </div>
+                    <CardTitle className="text-base leading-tight">{f.report?.headline || f.session?.scenario || "Session feedback"}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      className="w-full bg-preply-pink text-foreground hover:bg-preply-pink/90 gap-1.5"
+                      onClick={() => navigate(`/session/${f.session_id}/feedback`)}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      View feedback
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
         {bookings.length === 0 ? (
           <Card>
