@@ -30,10 +30,11 @@ const SessionRoom = () => {
 
   const channelName = `session-${id}`;
 
-  const { recording } = useSessionRecording({
+  const { recording, error: recordingError } = useSessionRecording({
     sessionId: id,
     userId: user?.id,
     enabled: inCall,
+    language: session?.language ? `${session.language}` : "en-US",
   });
 
   useEffect(() => {
@@ -114,9 +115,14 @@ const SessionRoom = () => {
                 </Badge>
                 <span className="text-sm font-medium">{session.scenario}</span>
                 {recording && (
-                  <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground" title="Audio is captured to generate your post-session feedback">
+                  <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground" title="Your speech is transcribed locally in your browser to generate post-session feedback. No audio is uploaded.">
                     <Circle className="h-2 w-2 fill-destructive text-destructive animate-pulse" />
-                    Recording for feedback
+                    Live transcription on
+                  </span>
+                )}
+                {recordingError && (
+                  <span className="hidden sm:flex items-center gap-1.5 text-xs text-destructive" title={recordingError}>
+                    Transcription unavailable
                   </span>
                 )}
               </div>
