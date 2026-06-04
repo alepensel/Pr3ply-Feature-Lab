@@ -30,11 +30,18 @@ const SessionRoom = () => {
 
   const channelName = `session-${id}`;
 
+  const langMap: Record<string, string> = {
+    english: "en-US", spanish: "es-ES", french: "fr-FR", german: "de-DE",
+    italian: "it-IT", portuguese: "pt-BR", japanese: "ja-JP", korean: "ko-KR",
+    chinese: "zh-CN", russian: "ru-RU", arabic: "ar-SA", dutch: "nl-NL",
+  };
+  const sttLang = langMap[(session?.language || "english").toLowerCase()] || "en-US";
+
   const { recording, error: recordingError } = useSessionRecording({
     sessionId: id,
     userId: user?.id,
     enabled: inCall,
-    language: session?.language ? `${session.language}` : "en-US",
+    language: sttLang,
   });
 
   useEffect(() => {
