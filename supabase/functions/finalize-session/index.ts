@@ -6,67 +6,15 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const MODEL = "google/gemini-2.5-flash";
-
-async function transcribeUser(admin: any, sessionId: string, userId: string): Promise<string> {
-  // List the chunks for this user, ordered by chunk_index
-  const { data: chunks } = await admin
-    .from("session_audio_chunks")
-    .select("path, chunk_index")
-    .eq("session_id", sessionId)
-    .eq("user_id", userId)
-    .order("chunk_index", { ascending: true });
-
-  if (!chunks || chunks.length === 0) return "";
-
-  // Download chunks and base64-encode the merged audio (treat each chunk independently to limit memory)
-  const transcripts: string[] = [];
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-
-  for (const c of chunks) {
-    const { data: blob } = await admin.storage.from("session-recordings").download(c.path);
-    if (!blob) continue;
-    const buf = new Uint8Array(await blob.arrayBuffer());
-    // base64 encode
-    let bin = "";
-    for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
-    const b64 = btoa(bin);
-
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: "You transcribe spoken audio verbatim. Output only the transcript text with no commentary. If the audio is silent or unintelligible, output an empty string." },
-          { role: "user", content: [
-            { type: "text", text: "Transcribe this audio:" },
-            { type: "input_audio", input_audio: { data: b64, format: "webm" } },
-          ] },
-        ],
-      }),
-    });
-    if (!res.ok) {
-      console.error("transcribe chunk failed", res.status, await res.text().catch(() => ""));
-      continue;
-    }
-    const j = await res.json();
-    const text = j?.choices?.[0]?.message?.content || "";
-    if (text) transcripts.push(typeof text === "string" ? text : JSON.stringify(text));
-  }
-
-  return transcripts.join(" ").trim();
-}
-
 async function generateFeedback(admin: any, sessionId: string, userId: string, transcript: string, sessionRow: any, prompts: any) {
   if (!transcript) {
     const empty = {
       strengths: [],
       mistakes: [],
       vocabulary_to_remember: [],
-      next_steps: "We couldn't capture enough audio from you in this session. Try unmuting yourself and speaking up next time!",
+      next_steps: "We couldn't capture enough of your speech in this session. Make sure your browser has mic permission and that you spoke during the call so we can transcribe live next time.",
       overall_score: 0,
-      headline: "Not enough audio captured",
+      headline: "Not enough speech captured",
     };
     await admin.from("session_feedback").upsert({
       session_id: sessionId,
@@ -192,12 +140,16 @@ Deno.serve(async (req) => {
       updated_at: new Date().toISOString(),
     }, { onConflict: "session_id" });
 
-    // Collect distinct users with audio chunks
-    const { data: users } = await admin
-      .from("session_audio_chunks")
-      .select("user_id")
+    // Collect distinct users with stored transcripts (captured live via the browser)
+    const { data: transcriptRows } = await admin
+      .from("session_transcripts")
+      .select("user_id, text")
       .eq("session_id", sessionId);
-    const userIds = Array.from(new Set((users || []).map((r: any) => r.user_id)));
+    const transcriptByUser = new Map<string, string>();
+    for (const r of (transcriptRows || []) as any[]) {
+      transcriptByUser.set(r.user_id, r.text || "");
+    }
+    const userIds = Array.from(transcriptByUser.keys());
 
     const { data: promptsRow } = await admin
       .from("session_roleplay_prompts")
@@ -209,13 +161,7 @@ Deno.serve(async (req) => {
     // Process serially to avoid concurrent AI quota spikes
     for (const uid of userIds) {
       try {
-        const transcript = await transcribeUser(admin, sessionId, uid);
-        await admin.from("session_transcripts").upsert({
-          session_id: sessionId,
-          user_id: uid,
-          text: transcript,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "session_id,user_id" });
+        const transcript = transcriptByUser.get(uid) || "";
         await generateFeedback(admin, sessionId, uid, transcript, sessionRow, prompts);
       } catch (e) {
         console.error("finalize user failed", uid, e);

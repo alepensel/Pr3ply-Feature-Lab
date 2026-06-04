@@ -5,86 +5,99 @@ interface Options {
   sessionId: string | undefined;
   userId: string | undefined;
   enabled: boolean;
-  chunkSeconds?: number;
+  language?: string; // BCP-47 e.g. "en-US"
 }
 
 /**
- * Records the user's mic in chunks while enabled, uploading each chunk to the
- * session-recordings bucket and registering it in session_audio_chunks.
+ * Live-transcribes the local user's speech using the browser Web Speech API
+ * and periodically upserts the accumulated transcript into session_transcripts.
+ * No audio leaves the device; only the recognized text is stored.
  */
-export const useSessionRecording = ({ sessionId, userId, enabled, chunkSeconds = 30 }: Options) => {
+export const useSessionRecording = ({ sessionId, userId, enabled, language = "en-US" }: Options) => {
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const chunkIndexRef = useRef(0);
+  const recognitionRef = useRef<any>(null);
+  const transcriptRef = useRef<string>("");
+  const dirtyRef = useRef(false);
+  const flushTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!enabled || !sessionId || !userId) return;
-    if (typeof window === "undefined" || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setError("Recording not supported in this browser");
+    const SR: any =
+      (typeof window !== "undefined" && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)) ||
+      null;
+    if (!SR) {
+      setError("Live transcription isn't supported in this browser. Try Chrome, Edge, or Safari.");
       return;
     }
 
     let stopped = false;
 
-    const start = async () => {
+    const flush = async () => {
+      if (!dirtyRef.current) return;
+      dirtyRef.current = false;
+      const text = transcriptRef.current.trim();
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        streamRef.current = stream;
-
-        const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : "audio/webm";
-        const recorder = new MediaRecorder(stream, { mimeType: mime });
-        recorderRef.current = recorder;
-
-        recorder.ondataavailable = async (e) => {
-          if (!e.data || e.data.size === 0) return;
-          const idx = chunkIndexRef.current++;
-          const path = `sessions/${sessionId}/${userId}/${String(idx).padStart(4, "0")}.webm`;
-          const startedAt = new Date().toISOString();
-          try {
-            const { error: upErr } = await supabase.storage
-              .from("session-recordings")
-              .upload(path, e.data, { contentType: "audio/webm", upsert: true });
-            if (upErr) { console.error("chunk upload failed", upErr); return; }
-            await supabase.from("session_audio_chunks" as any).insert({
-              session_id: sessionId,
-              user_id: userId,
-              path,
-              chunk_index: idx,
-              started_at: startedAt,
-              duration_ms: chunkSeconds * 1000,
-            });
-          } catch (err) {
-            console.error("chunk persist failed", err);
-          }
-        };
-
-        recorder.start(chunkSeconds * 1000);
-        if (!stopped) setRecording(true);
+        await supabase
+          .from("session_transcripts")
+          .upsert(
+            { session_id: sessionId, user_id: userId, text, updated_at: new Date().toISOString() },
+            { onConflict: "session_id,user_id" }
+          );
       } catch (err) {
-        console.error("getUserMedia failed", err);
-        setError(err instanceof Error ? err.message : "Mic access denied");
+        console.error("transcript upsert failed", err);
       }
     };
 
-    start();
+    const recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = language;
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      let appended = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const r = event.results[i];
+        if (r.isFinal) appended += (r[0]?.transcript || "") + " ";
+      }
+      if (appended) {
+        transcriptRef.current = (transcriptRef.current + " " + appended).replace(/\s+/g, " ").trim();
+        dirtyRef.current = true;
+      }
+    };
+    recognition.onerror = (e: any) => {
+      if (e?.error && e.error !== "no-speech" && e.error !== "aborted") {
+        console.warn("speech recognition error", e.error);
+      }
+    };
+    recognition.onend = () => {
+      // Auto-restart while still enabled (Chrome stops after pauses)
+      if (!stopped) {
+        try { recognition.start(); } catch { /* ignore */ }
+      }
+    };
+
+    try {
+      recognition.start();
+      setRecording(true);
+    } catch (err) {
+      console.error("recognition.start failed", err);
+      setError("Could not start live transcription");
+    }
+
+    flushTimerRef.current = window.setInterval(flush, 8000);
 
     return () => {
       stopped = true;
-      try {
-        if (recorderRef.current && recorderRef.current.state !== "inactive") {
-          recorderRef.current.stop();
-        }
-      } catch { /* ignore */ }
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-      recorderRef.current = null;
-      streamRef.current = null;
+      if (flushTimerRef.current) window.clearInterval(flushTimerRef.current);
+      try { recognition.onend = null; recognition.stop(); } catch { /* ignore */ }
+      recognitionRef.current = null;
       setRecording(false);
+      // Final flush
+      flush();
     };
-  }, [enabled, sessionId, userId, chunkSeconds]);
+  }, [enabled, sessionId, userId, language]);
 
   return { recording, error };
 };
