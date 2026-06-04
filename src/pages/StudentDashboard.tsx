@@ -98,7 +98,7 @@ const StudentDashboard = () => {
       const sessionIds = rows.map((r) => r.session_id);
       if (sessionIds.length === 0) { setFeedbackEntries([]); return; }
       const { data: sessionRows } = await supabase
-        .from("public_sessions" as any)
+        .from("sessions")
         .select("id, theme, scenario, scheduled_at")
         .in("id", sessionIds);
       const sessionsById: Record<string, any> = {};
