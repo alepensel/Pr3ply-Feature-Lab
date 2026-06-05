@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, Video, Loader2, Sparkles, Check, Star } from "lucide-react";
 import { countryFlag } from "@/lib/countryFlag";
+import { tutor as defaultTutor } from "@/data/mockData";
 
 interface Booking {
   id: string;
@@ -61,6 +62,7 @@ const StudentDashboard = () => {
   const { sessions } = useSessions();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [feedbackEntries, setFeedbackEntries] = useState<FeedbackEntry[]>([]);
+  const [bookedSessions, setBookedSessions] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const now = useNow();
 
@@ -83,6 +85,29 @@ const StudentDashboard = () => {
     };
     if (user) fetchBookings();
   }, [user]);
+
+  useEffect(() => {
+    const fetchBookedSessions = async () => {
+      if (bookings.length === 0) { setBookedSessions({}); return; }
+      const ids = Array.from(new Set(bookings.map((b) => b.session_id)));
+      const { data } = await supabase
+        .from("sessions")
+        .select("*")
+        .in("id", ids);
+      const map: Record<string, any> = {};
+      (data || []).forEach((s: any) => {
+        map[s.id] = {
+          ...s,
+          tutor: defaultTutor,
+          maxSpots: s.max_spots,
+          spotsLeft: Math.max(0, s.max_spots),
+          nextSession: s.next_session,
+        };
+      });
+      setBookedSessions(map);
+    };
+    fetchBookedSessions();
+  }, [bookings]);
 
   useEffect(() => {
     const fetchFeedback = async () => {
@@ -114,7 +139,7 @@ const StudentDashboard = () => {
   }, [user]);
 
   const getSessionDetails = (sessionId: string) =>
-    sessions.find((s) => s.id === sessionId);
+    sessions.find((s) => s.id === sessionId) || bookedSessions[sessionId];
 
   const feedbackBySession = feedbackEntries.reduce<Record<string, FeedbackEntry>>((acc, f) => {
     acc[f.session_id] = f;
