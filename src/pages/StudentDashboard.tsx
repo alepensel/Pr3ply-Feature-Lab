@@ -270,11 +270,6 @@ const StudentDashboard = () => {
                       <Users className="h-4 w-4" />
                       <span>{session.maxSpots} spots total</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Video className="h-4 w-4" />
-                      <span>Google Meet</span>
-                    </div>
-
                     <div className="pt-3 flex gap-2">
                       <Button
                         variant="outline"
