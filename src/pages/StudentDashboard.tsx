@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users, Video, Loader2, Sparkles } from "lucide-react";
+import { Calendar, Clock, Users, Video, Loader2, Sparkles, Check, Star } from "lucide-react";
 import { countryFlag } from "@/lib/countryFlag";
 
 interface Booking {
@@ -116,6 +116,37 @@ const StudentDashboard = () => {
   const getSessionDetails = (sessionId: string) =>
     sessions.find((s) => s.id === sessionId);
 
+  const feedbackBySession = feedbackEntries.reduce<Record<string, FeedbackEntry>>((acc, f) => {
+    acc[f.session_id] = f;
+    return acc;
+  }, {});
+
+  const upcomingBookings = bookings.filter((b) => {
+    const s = getSessionDetails(b.session_id);
+    if (!s) return false;
+    return new Date(s.scheduled_at).getTime() > now.getTime() - 60 * 60_000;
+  });
+
+  const pastBookings = bookings
+    .filter((b) => {
+      const s = getSessionDetails(b.session_id);
+      if (!s) return false;
+      return new Date(s.scheduled_at).getTime() <= now.getTime() - 60 * 60_000;
+    })
+    .sort((a, b) => {
+      const sa = getSessionDetails(a.session_id);
+      const sb = getSessionDetails(b.session_id);
+      return new Date(sb?.scheduled_at || 0).getTime() - new Date(sa?.scheduled_at || 0).getTime();
+    });
+
+  const formatPastDate = (iso: string, durationMin = 50) => {
+    const start = new Date(iso);
+    const end = new Date(start.getTime() + durationMin * 60_000);
+    const day = start.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+    const t = (d: Date) => d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+    return `${day} · ${t(start)} – ${t(end)}`;
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -183,8 +214,14 @@ const StudentDashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {bookings.map((booking) => {
+          <>
+          <section className="mb-10">
+            <h2 className="text-xl font-bold mb-4">Upcoming lessons</h2>
+            {upcomingBookings.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No upcoming lessons booked.</p>
+            ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {upcomingBookings.map((booking) => {
               const session = getSessionDetails(booking.session_id);
               if (!session) return null;
 
@@ -258,7 +295,74 @@ const StudentDashboard = () => {
                 </Card>
               );
             })}
-          </div>
+            </div>
+            )}
+          </section>
+
+          {pastBookings.length > 0 && (
+            <section className="mb-10">
+              <h2 className="text-xl font-bold mb-4">Past lessons</h2>
+              <div className="space-y-3">
+                {pastBookings.map((booking) => {
+                  const session = getSessionDetails(booking.session_id);
+                  if (!session) return null;
+                  const fb = feedbackBySession[booking.session_id];
+                  return (
+                    <div
+                      key={booking.id}
+                      className="flex items-center gap-4 rounded-lg border border-border p-4 hover:bg-muted/30 transition-colors"
+                    >
+                      <img
+                        src={session.tutor.avatar}
+                        alt={session.tutor.name}
+                        className="h-12 w-12 rounded-md object-cover flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-foreground">
+                            {formatPastDate(session.scheduled_at)}
+                          </span>
+                          {fb?.score != null && (
+                            <span className="inline-flex items-center gap-1 bg-preply-pink/30 text-foreground px-2 py-0.5 rounded text-xs font-semibold">
+                              <Star className="h-3 w-3 fill-current" />
+                              {fb.score}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                          <Check className="h-4 w-4" />
+                          <span>Completed</span>
+                          <span>·</span>
+                          <span>{session.tutor.name}, {session.theme}</span>
+                        </div>
+                      </div>
+                      {fb ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/session/${booking.session_id}/feedback`)}
+                          className="gap-1.5 flex-shrink-0"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          View feedback
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/session/${booking.session_id}`)}
+                          className="flex-shrink-0"
+                        >
+                          View details
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+          </>
         )}
       </main>
     </div>
