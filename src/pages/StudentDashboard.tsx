@@ -63,6 +63,7 @@ const StudentDashboard = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [feedbackEntries, setFeedbackEntries] = useState<FeedbackEntry[]>([]);
   const [bookedSessions, setBookedSessions] = useState<Record<string, any>>({});
+  const [attendedSessionIds, setAttendedSessionIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const now = useNow();
 
@@ -138,6 +139,25 @@ const StudentDashboard = () => {
     if (user) fetchFeedback();
   }, [user]);
 
+  useEffect(() => {
+    const fetchAttended = async () => {
+      if (!user) { setAttendedSessionIds(new Set()); return; }
+      const ids = new Set<string>();
+      const { data: fb } = await supabase
+        .from("session_feedback" as any)
+        .select("session_id")
+        .eq("user_id", user.id);
+      (fb as any[] | null)?.forEach((r) => ids.add(r.session_id));
+      const { data: audio } = await supabase
+        .from("session_audio_chunks" as any)
+        .select("session_id")
+        .eq("user_id", user.id);
+      (audio as any[] | null)?.forEach((r) => ids.add(r.session_id));
+      setAttendedSessionIds(ids);
+    };
+    fetchAttended();
+  }, [user]);
+
   const getSessionDetails = (sessionId: string) =>
     sessions.find((s) => s.id === sessionId) || bookedSessions[sessionId];
 
@@ -156,7 +176,8 @@ const StudentDashboard = () => {
     .filter((b) => {
       const s = getSessionDetails(b.session_id);
       if (!s) return false;
-      return new Date(s.scheduled_at).getTime() <= now.getTime() - 60 * 60_000;
+      if (new Date(s.scheduled_at).getTime() > now.getTime() - 60 * 60_000) return false;
+      return attendedSessionIds.has(b.session_id);
     })
     .sort((a, b) => {
       const sa = getSessionDetails(a.session_id);
