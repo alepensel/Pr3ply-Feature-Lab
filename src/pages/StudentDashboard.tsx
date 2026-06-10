@@ -307,9 +307,16 @@ const StudentDashboard = () => {
             )}
           </section>
 
-          {pastBookings.length > 0 && (
-            <section className="mb-10">
-              <h2 className="text-xl font-bold mb-4">Past lessons</h2>
+          <section className="mb-10">
+            <h2 className="text-xl font-bold mb-4">Past lessons</h2>
+            {pastBookings.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border p-8 text-center">
+                <Check className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  No past lessons yet. Once you complete a session, it will appear here with your feedback.
+                </p>
+              </div>
+            ) : (
               <div className="space-y-3">
                 {pastBookings.map((booking) => {
                   const session = getSessionDetails(booking.session_id);
@@ -368,8 +375,8 @@ const StudentDashboard = () => {
                   );
                 })}
               </div>
-            </section>
-          )}
+            )}
+          </section>
           </>
         )}
       </main>
