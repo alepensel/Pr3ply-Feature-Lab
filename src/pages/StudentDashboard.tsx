@@ -63,6 +63,7 @@ const StudentDashboard = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [feedbackEntries, setFeedbackEntries] = useState<FeedbackEntry[]>([]);
   const [bookedSessions, setBookedSessions] = useState<Record<string, any>>({});
+  const [attendedSessionIds, setAttendedSessionIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const now = useNow();
 
@@ -138,6 +139,25 @@ const StudentDashboard = () => {
     if (user) fetchFeedback();
   }, [user]);
 
+  useEffect(() => {
+    const fetchAttended = async () => {
+      if (!user) { setAttendedSessionIds(new Set()); return; }
+      const ids = new Set<string>();
+      const { data: fb } = await supabase
+        .from("session_feedback" as any)
+        .select("session_id")
+        .eq("user_id", user.id);
+      (fb as any[] | null)?.forEach((r) => ids.add(r.session_id));
+      const { data: audio } = await supabase
+        .from("session_audio_chunks" as any)
+        .select("session_id")
+        .eq("user_id", user.id);
+      (audio as any[] | null)?.forEach((r) => ids.add(r.session_id));
+      setAttendedSessionIds(ids);
+    };
+    fetchAttended();
+  }, [user]);
+
   const getSessionDetails = (sessionId: string) =>
     sessions.find((s) => s.id === sessionId) || bookedSessions[sessionId];
 
@@ -156,7 +176,8 @@ const StudentDashboard = () => {
     .filter((b) => {
       const s = getSessionDetails(b.session_id);
       if (!s) return false;
-      return new Date(s.scheduled_at).getTime() <= now.getTime() - 60 * 60_000;
+      if (new Date(s.scheduled_at).getTime() > now.getTime() - 60 * 60_000) return false;
+      return attendedSessionIds.has(b.session_id);
     })
     .sort((a, b) => {
       const sa = getSessionDetails(a.session_id);
@@ -193,39 +214,6 @@ const StudentDashboard = () => {
             View and manage your booked conversation sessions
           </p>
         </div>
-
-        {feedbackEntries.length > 0 && (
-          <section className="mb-10">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="h-5 w-5 text-preply-pink" />
-              <h2 className="text-xl font-bold">Your feedback</h2>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {feedbackEntries.map((f) => (
-                <Card key={f.session_id} className="overflow-hidden">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="bg-secondary px-2 py-0.5 rounded text-xs font-medium">{f.session?.theme || "Session"}</span>
-                      {f.score != null && (
-                        <Badge className="bg-preply-pink text-foreground">{f.score}/10</Badge>
-                      )}
-                    </div>
-                    <CardTitle className="text-base leading-tight">{f.report?.headline || f.session?.scenario || "Session feedback"}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Button
-                      className="w-full bg-preply-pink text-foreground hover:bg-preply-pink/90 gap-1.5"
-                      onClick={() => navigate(`/session/${f.session_id}/feedback`)}
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      View feedback
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
-        )}
 
         {bookings.length === 0 ? (
           <Card>
