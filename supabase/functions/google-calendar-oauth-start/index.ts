@@ -24,7 +24,27 @@ serve(async (req) => {
     const { redirectTo } = await req.json().catch(() => ({ redirectTo: "" }));
 
     const redirectUri = `${Deno.env.get("SUPABASE_URL")}/functions/v1/google-calendar-oauth-callback`;
-    const state = btoa(JSON.stringify({ uid: user.id, redirectTo: redirectTo || "" }));
+
+    // Only accept safe redirect targets (relative paths) to prevent open redirects.
+    const safeRedirect = typeof redirectTo === "string" && redirectTo.startsWith("/")
+      ? redirectTo
+      : "";
+
+    // Sign the state with HMAC using the service role key so the callback can
+    // verify that the uid was set server-side and not tampered with by the client.
+    const payloadObj = { uid: user.id, redirectTo: safeRedirect, ts: Date.now() };
+    const payloadJson = JSON.stringify(payloadObj);
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      enc.encode(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const sigBuf = await crypto.subtle.sign("HMAC", key, enc.encode(payloadJson));
+    const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sigBuf)));
+    const state = btoa(JSON.stringify({ p: btoa(payloadJson), s: sigB64 }));
 
     const params = new URLSearchParams({
       client_id: clientId,

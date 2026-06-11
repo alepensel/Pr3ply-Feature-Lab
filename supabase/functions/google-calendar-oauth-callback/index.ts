@@ -15,7 +15,28 @@ serve(async (req) => {
     if (error) throw new Error(`Google returned: ${error}`);
     if (!code || !stateRaw) throw new Error("Missing code or state");
 
-    const state = JSON.parse(atob(stateRaw)) as { uid: string; redirectTo?: string };
+    // Verify HMAC-signed state to prevent uid spoofing and open redirects.
+    const outer = JSON.parse(atob(stateRaw)) as { p: string; s: string };
+    if (!outer?.p || !outer?.s) throw new Error("Invalid state");
+    const payloadJson = atob(outer.p);
+    const enc = new TextEncoder();
+    const hmacKey = await crypto.subtle.importKey(
+      "raw",
+      enc.encode(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"],
+    );
+    const sigBytes = Uint8Array.from(atob(outer.s), (c) => c.charCodeAt(0));
+    const ok = await crypto.subtle.verify("HMAC", hmacKey, sigBytes, enc.encode(payloadJson));
+    if (!ok) throw new Error("State signature mismatch");
+    const state = JSON.parse(payloadJson) as { uid: string; redirectTo?: string; ts?: number };
+    // Expire state after 10 minutes.
+    if (!state.ts || Date.now() - state.ts > 10 * 60 * 1000) throw new Error("State expired");
+    // Enforce same-site redirect: only relative paths starting with "/".
+    const safeRedirect = typeof state.redirectTo === "string" && state.redirectTo.startsWith("/")
+      ? state.redirectTo
+      : "";
     const clientId = Deno.env.get("GOOGLE_OAUTH_CLIENT_ID");
     const clientSecret = Deno.env.get("GOOGLE_OAUTH_CLIENT_SECRET");
     if (!clientId || !clientSecret) throw new Error("Google OAuth not configured");
@@ -82,11 +103,11 @@ serve(async (req) => {
       .upsert(payload, { onConflict: "user_id" });
     if (upErr) throw new Error(upErr.message);
 
-    const target = state.redirectTo || "/profile?tab=calendar&connected=1";
+    const target = safeRedirect || "/profile?tab=calendar&connected=1";
     return respondRedirect(target);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
-    const fallback = `${appOrigin || ""}/profile?tab=calendar&error=${encodeURIComponent(msg)}`;
+    const fallback = `/profile?tab=calendar&error=${encodeURIComponent(msg)}`;
     return respondRedirect(fallback);
   }
 });
