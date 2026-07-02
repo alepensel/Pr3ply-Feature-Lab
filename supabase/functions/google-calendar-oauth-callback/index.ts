@@ -106,8 +106,7 @@ serve(async (req) => {
     const target = safeRedirect || "/profile?tab=calendar&connected=1";
     return respondRedirect(target);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Unknown error";
-    const fallback = `/profile?tab=calendar&error=${encodeURIComponent(msg)}`;
-    return respondRedirect(fallback);
+    console.error("google-calendar-oauth-callback error", e);
+    return respondRedirect("/profile?tab=calendar&error=oauth_failed");
   }
 });

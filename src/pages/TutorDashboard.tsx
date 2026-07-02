@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessions, type Session } from "@/hooks/useSessions";
+import { useUserRole } from "@/hooks/useUserRole";
 import Header from "@/components/Header";
 import SessionCard from "@/components/SessionCard";
 import SessionFormDialog from "@/components/SessionFormDialog";
@@ -23,6 +24,7 @@ import {
 
 const TutorDashboard = () => {
   const { user, loading: authLoading } = useAuth();
+  const { isTutor, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const { sessions, loading, refetch } = useSessions();
   const [formOpen, setFormOpen] = useState(false);
@@ -33,6 +35,12 @@ const TutorDashboard = () => {
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (!authLoading && !roleLoading && user && !isTutor) {
+      navigate("/dashboard");
+    }
+  }, [user, isTutor, authLoading, roleLoading, navigate]);
 
   const handleEdit = (session: Session) => {
     setEditingSession(session);
@@ -58,7 +66,7 @@ const TutorDashboard = () => {
     refetch();
   };
 
-  if (authLoading || loading) {
+  if (authLoading || roleLoading || loading || (user && !isTutor)) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
