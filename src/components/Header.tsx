@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import pr3plyLogo from "@/assets/preply-logo.png";
+import BrandMark from "@/components/BrandMark";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -41,7 +41,7 @@ const Header = () => {
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center h-9 md:h-10">
-            <img src={pr3plyLogo} alt="Pr3ply" className="h-full w-auto object-contain" />
+            <BrandMark className="text-xl" />
           </Link>
           <nav className="hidden md:flex items-center gap-5">
             {navItems.map((item) => {

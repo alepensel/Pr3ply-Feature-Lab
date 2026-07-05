@@ -28,7 +28,7 @@ This document describes what actually exists in the repo. No aspirational infras
 - `src/hooks/` — domain hooks: `useSessions`, `useUserRole`, `useProfile`, `useSessionPrompts`, `useSessionRoomState`, `useSessionRecording`.
 - `src/contexts/AuthContext.tsx` — wraps the Supabase auth session.
 - `src/integrations/supabase/` — auto-generated client and types; not hand-edited.
-- `src/data/mockData.ts` — synthetic tutor profile and public Preply review content used for the landing page.
+- `src/data/mockData.ts` — synthetic tutor profile and testimonial content used for the landing page.
 - `src/lib/` — small helpers (`countryFlag`, `formatNextSession`, `utils`).
 
 ## Database
@@ -90,7 +90,7 @@ All functions return generic error messages to the client; details go to server 
 
 ## Demo data
 
-- `src/data/mockData.ts` provides landing-page tutor profile and public-Preply review content.
+- `src/data/mockData.ts` provides synthetic landing-page tutor and testimonial content.
 - Seed sessions are inserted via migrations (currently a handful of dated sessions across mid-2026).
 - No real learner PII is bundled with the repo; learner rows are created by real sign-ups.
 
