@@ -41,7 +41,7 @@ const Header = () => {
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center h-9 md:h-10">
-            <BrandMark className="h-8" />
+            <BrandMark className="h-10 md:h-11" />
           </Link>
           <nav className="hidden md:flex items-center gap-5">
             {navItems.map((item) => {
