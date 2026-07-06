@@ -40,8 +40,8 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center h-9 md:h-10">
-            <BrandMark className="h-10 md:h-11" />
+          <Link to="/" className="flex items-center h-11 md:h-12">
+            <BrandMark className="h-9 md:h-10" />
           </Link>
           <nav className="hidden md:flex items-center gap-5">
             {navItems.map((item) => {
