@@ -1,19 +1,22 @@
 import { cn } from "@/lib/utils";
+import logoBlack from "@/assets/pr3ply-logo-black.png.asset.json";
+import logoWhite from "@/assets/pr3ply-logo-white.png.asset.json";
 
-const BrandMark = ({ className }: { className?: string }) => {
+const BrandMark = ({
+  className,
+  variant = "black",
+}: {
+  className?: string;
+  variant?: "black" | "white";
+}) => {
+  const src = variant === "white" ? logoWhite.url : logoBlack.url;
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-2 font-extrabold tracking-normal text-foreground",
-        className
-      )}
-      aria-label="Pr3ply"
-    >
-      <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-        P3
-      </span>
-      <span>Pr3ply</span>
-    </span>
+    <img
+      src={src}
+      alt="Pr3ply"
+      className={cn("h-8 w-auto select-none", className)}
+      draggable={false}
+    />
   );
 };
 
