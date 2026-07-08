@@ -114,10 +114,16 @@ const ProfileSettings = () => {
     }
 
     setUploading(true);
-    const ext = file.name.split(".").pop();
+    // Server-enforced content type: force safe image MIME so the storage CDN
+    // cannot serve uploaded bytes as HTML/SVG regardless of the file extension.
+    const safeContentType = file.type === "image/png" ? "image/png" : "image/jpeg";
+    const ext = safeContentType === "image/png" ? "png" : "jpg";
     const path = `${user.id}/avatar.${ext}`;
 
-    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from("avatars").upload(path, file, {
+      upsert: true,
+      contentType: safeContentType,
+    });
     if (error) {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
       setUploading(false);
