@@ -129,11 +129,9 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
     return { tutorPoint: tp, studentPoints: sp, markers: mk };
   }, [tutorCountry, participantCountries]);
 
-  if (!tutorPoint || studentPoints.length === 0) return null;
-
   const fitToPoints = useCallback(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !tutorPoint) return;
     const all = [tutorPoint, ...studentPoints];
     let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
     for (const p of all) {
@@ -148,6 +146,8 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
       maxZoom: 3,
     });
   }, [tutorPoint, studentPoints]);
+
+  if (!tutorPoint || studentPoints.length === 0) return null;
 
   // Build great-circle-ish curved arcs between tutor and each student
   // (simple quadratic bezier through midpoint offset perpendicular).
