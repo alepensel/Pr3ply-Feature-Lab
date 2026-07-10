@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { MapPin } from "lucide-react";
-import worldMapImg from "@/assets/world-map.png";
+import Map, { Marker, Source, Layer } from "react-map-gl/maplibre";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 const COUNTRY_COORDS: Record<string, [number, number]> = {
   "Afghanistan": [33, 65], "Albania": [41, 20], "Algeria": [28, 3], "Andorra": [42.5, 1.5],
@@ -61,27 +62,35 @@ const COUNTRY_COORDS: Record<string, [number, number]> = {
   "Vietnam": [16, 108], "Yemen": [15, 48], "Zambia": [-15, 28], "Zimbabwe": [-20, 30],
 };
 
-/* Convert lat/lng → pixel position relative to the map image.
-   The map image (740x493) is a cropped equirectangular projection.
-   Calibrated bounds based on visible coastlines. */
-/* Calibration tuned visually against the cropped silhouette map.
-   Latitude is non-linear on this artwork, so LAT_MAX is intentionally
-   pushed above 90 to compensate for the compressed northern hemisphere. */
-const LNG_MIN = -165;
-const LNG_MAX = 180;
-const LAT_MAX = 95;
-const LAT_MIN = -58;
-function toPercent(lat: number, lng: number): [number, number] {
-  const x = ((lng - LNG_MIN) / (LNG_MAX - LNG_MIN)) * 100;
-  const latClamped = Math.max(LAT_MIN, Math.min(LAT_MAX, lat));
-  const y = ((LAT_MAX - latClamped) / (LAT_MAX - LAT_MIN)) * 100;
-  return [x, y];
-}
-
 interface ParticipantMapProps {
   tutorCountry: string;
   participantCountries: (string | null)[];
 }
+
+// Free OSM raster style — no API key, no commercial license concerns.
+const MAP_STYLE = {
+  version: 8 as const,
+  sources: {
+    osm: {
+      type: "raster" as const,
+      tiles: [
+        "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors",
+    },
+  },
+  layers: [
+    {
+      id: "osm",
+      type: "raster" as const,
+      source: "osm",
+      paint: { "raster-saturation": -1, "raster-contrast": -0.1, "raster-brightness-min": 0.85 },
+    },
+  ],
+};
 
 const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapProps) => {
   const points = useMemo(() => {
@@ -91,10 +100,10 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
       .map((c) => {
         const coords = COUNTRY_COORDS[c];
         if (!coords) return null;
-        const [x, y] = toPercent(coords[0], coords[1]);
-        return { country: c, x, y, isTutor: c === tutorCountry };
+        const [lat, lng] = coords;
+        return { country: c, lat, lng, isTutor: c === tutorCountry };
       })
-      .filter(Boolean) as { country: string; x: number; y: number; isTutor: boolean }[];
+      .filter(Boolean) as { country: string; lat: number; lng: number; isTutor: boolean }[];
   }, [tutorCountry, participantCountries]);
 
   if (points.length < 2) return null;
@@ -105,95 +114,118 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
   const TUTOR_COLOR = "hsl(var(--preply-pink))";
   const STUDENT_COLOR = "hsl(0, 0%, 10%)";
 
+  // Build great-circle-ish curved arcs between tutor and each student
+  // (simple quadratic bezier through midpoint offset perpendicular).
+  const arc = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+    const steps = 48;
+    const midLat = (a.lat + b.lat) / 2;
+    const midLng = (a.lng + b.lng) / 2;
+    const dx = b.lng - a.lng;
+    const dy = b.lat - a.lat;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const curve = Math.min(dist * 0.2, 15);
+    // perpendicular offset
+    const ox = -dy / (dist || 1);
+    const oy = dx / (dist || 1);
+    const cLng = midLng + ox * curve;
+    const cLat = midLat + oy * curve;
+    const coords: [number, number][] = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const lng = (1 - t) * (1 - t) * a.lng + 2 * (1 - t) * t * cLng + t * t * b.lng;
+      const lat = (1 - t) * (1 - t) * a.lat + 2 * (1 - t) * t * cLat + t * t * b.lat;
+      coords.push([lng, lat]);
+    }
+    return coords;
+  };
+
+  const tutorArcs: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: tutorPoint
+      ? studentPoints.map((p) => ({
+          type: "Feature",
+          properties: {},
+          geometry: { type: "LineString", coordinates: arc(tutorPoint, p) },
+        }))
+      : [],
+  };
+
+  const studentArcs: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: studentPoints.flatMap((p, i) =>
+      studentPoints.slice(i + 1).map((q) => ({
+        type: "Feature" as const,
+        properties: {},
+        geometry: { type: "LineString" as const, coordinates: arc(p, q) },
+      }))
+    ),
+  };
+
   return (
     <div className="rounded-xl border border-border bg-card p-4 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-2">
         <MapPin className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-bold text-foreground">Connected across the world</h2>
       </div>
-      <div className="flex-1 flex items-center justify-center">
-        <div className="relative w-full" style={{ aspectRatio: "740 / 493" }}>
-          <img
-            src={worldMapImg}
-            alt="World map"
-            className="absolute inset-0 w-full h-full opacity-30 grayscale"
-          />
-          {/* SVG overlay for connection lines (triangle between all points) */}
-          <svg
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            className="absolute inset-0 w-full h-full"
-          >
-            {tutorPoint &&
-              studentPoints.map((p) => (
-                <line
-                  key={`line-tutor-${p.country}`}
-                  x1={tutorPoint.x}
-                  y1={tutorPoint.y}
-                  x2={p.x}
-                  y2={p.y}
-                  stroke={TUTOR_COLOR}
-                  strokeWidth="0.3"
-                  strokeDasharray="1 0.8"
-                />
-              ))}
-            {studentPoints.map((p, i) =>
-              studentPoints.slice(i + 1).map((q) => (
-                <line
-                  key={`line-${p.country}-${q.country}`}
-                  x1={p.x}
-                  y1={p.y}
-                  x2={q.x}
-                  y2={q.y}
-                  stroke="hsl(0, 0%, 10%)"
-                  strokeOpacity="0.4"
-                  strokeWidth="0.3"
-                  strokeDasharray="1 0.8"
-                />
-              ))
-            )}
-          </svg>
-          {/* Pin markers */}
+      <div className="flex-1 min-h-[240px] rounded-lg overflow-hidden border border-border">
+        <Map
+          initialViewState={{ longitude: 10, latitude: 20, zoom: 0.6 }}
+          mapStyle={MAP_STYLE as maplibregl.StyleSpecification}
+          attributionControl={false}
+          dragRotate={false}
+          pitchWithRotate={false}
+          touchZoomRotate={false}
+          style={{ width: "100%", height: "100%" }}
+        >
+          <Source id="tutor-arcs" type="geojson" data={tutorArcs}>
+            <Layer
+              id="tutor-arcs-line"
+              type="line"
+              paint={{
+                "line-color": TUTOR_COLOR,
+                "line-width": 1.5,
+                "line-dasharray": [2, 1.5],
+                "line-opacity": 0.9,
+              }}
+            />
+          </Source>
+          <Source id="student-arcs" type="geojson" data={studentArcs}>
+            <Layer
+              id="student-arcs-line"
+              type="line"
+              paint={{
+                "line-color": STUDENT_COLOR,
+                "line-width": 1,
+                "line-dasharray": [2, 1.5],
+                "line-opacity": 0.35,
+              }}
+            />
+          </Source>
           {points.map((p) => {
             const color = p.isTutor ? TUTOR_COLOR : STUDENT_COLOR;
             return (
-              <div key={p.country}>
-                {/* Pin: tip anchored exactly at (x%, y%) */}
-                <svg
-                  width="16"
-                  height="21"
-                  viewBox="0 0 16 21"
-                  className="absolute drop-shadow-sm"
-                  style={{
-                    left: `${p.x}%`,
-                    top: `${p.y}%`,
-                    transform: "translate(-50%, -100%)",
-                  }}
-                >
-                  <path
-                    d="M8,21 C8,21 1,13 1,8 A7,7 0 1,1 15,8 C15,13 8,21 8,21Z"
-                    fill={color}
-                    stroke="white"
-                    strokeWidth="1.5"
-                  />
-                  <circle cx="8" cy="8" r="3" fill="white" />
-                </svg>
-                {/* Label: positioned independently below the pin tip */}
-                <span
-                  className="absolute text-muted-foreground font-medium whitespace-nowrap"
-                  style={{
-                    left: `${p.x}%`,
-                    top: `${p.y}%`,
-                    transform: "translate(-50%, 2px)",
-                    fontSize: "7px",
-                  }}
-                >
-                  {p.country}
-                </span>
-              </div>
+              <Marker key={p.country} longitude={p.lng} latitude={p.lat} anchor="bottom">
+                <div className="flex flex-col items-center pointer-events-none">
+                  <svg width="18" height="24" viewBox="0 0 16 21" className="drop-shadow">
+                    <path
+                      d="M8,21 C8,21 1,13 1,8 A7,7 0 1,1 15,8 C15,13 8,21 8,21Z"
+                      fill={color}
+                      stroke="white"
+                      strokeWidth="1.5"
+                    />
+                    <circle cx="8" cy="8" r="3" fill="white" />
+                  </svg>
+                  <span
+                    className="mt-0.5 px-1 rounded bg-background/80 text-foreground font-medium whitespace-nowrap"
+                    style={{ fontSize: "9px" }}
+                  >
+                    {p.country}
+                  </span>
+                </div>
+              </Marker>
             );
           })}
-        </div>
+        </Map>
       </div>
     </div>
   );
