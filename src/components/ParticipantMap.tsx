@@ -1,8 +1,10 @@
 import { useMemo } from "react";
 import { MapPin } from "lucide-react";
 import Map, { Marker, Source, Layer } from "react-map-gl/maplibre";
+import type { MapRef } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, LineString } from "geojson";
+import { useRef, useCallback } from "react";
 
 const COUNTRY_COORDS: Record<string, [number, number]> = {
   "Afghanistan": [33, 65], "Albania": [41, 20], "Algeria": [28, 3], "Andorra": [42.5, 1.5],
@@ -94,26 +96,58 @@ const MAP_STYLE = {
 };
 
 const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapProps) => {
-  const points = useMemo(() => {
-    const allCountries = [tutorCountry, ...participantCountries.filter(Boolean)] as string[];
-    const unique = [...new Set(allCountries)];
-    return unique
-      .map((c) => {
-        const coords = COUNTRY_COORDS[c];
-        if (!coords) return null;
-        const [lat, lng] = coords;
-        return { country: c, lat, lng, isTutor: c === tutorCountry };
-      })
-      .filter(Boolean) as { country: string; lat: number; lng: number; isTutor: boolean }[];
+  const mapRef = useRef<MapRef | null>(null);
+  const TUTOR_COLOR = "hsl(330, 100%, 60%)";
+  const STUDENT_COLOR = "hsl(0, 0%, 10%)";
+
+  const { tutorPoint, studentPoints, markers } = useMemo(() => {
+    const resolve = (c: string) => {
+      const coords = COUNTRY_COORDS[c];
+      if (!coords) return null;
+      return { country: c, lat: coords[0], lng: coords[1] };
+    };
+    const tp = resolve(tutorCountry);
+    const sp = participantCountries
+      .filter(Boolean)
+      .map((c) => resolve(c as string))
+      .filter(Boolean) as { country: string; lat: number; lng: number }[];
+
+    // Build unique markers by rounded coord so overlapping students still render once,
+    // but arcs use every student.
+    const seen = new Set<string>();
+    const mk: { country: string; lat: number; lng: number; isTutor: boolean }[] = [];
+    if (tp) {
+      seen.add(`${tp.lat.toFixed(1)},${tp.lng.toFixed(1)}`);
+      mk.push({ ...tp, isTutor: true });
+    }
+    for (const s of sp) {
+      const key = `${s.lat.toFixed(1)},${s.lng.toFixed(1)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      mk.push({ ...s, isTutor: false });
+    }
+    return { tutorPoint: tp, studentPoints: sp, markers: mk };
   }, [tutorCountry, participantCountries]);
 
-  if (points.length < 2) return null;
+  const fitToPoints = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || !tutorPoint) return;
+    const all = [tutorPoint, ...studentPoints];
+    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+    for (const p of all) {
+      if (p.lng < minLng) minLng = p.lng;
+      if (p.lng > maxLng) maxLng = p.lng;
+      if (p.lat < minLat) minLat = p.lat;
+      if (p.lat > maxLat) maxLat = p.lat;
+    }
+    map.fitBounds([[minLng, minLat], [maxLng, maxLat]], {
+      padding: 40,
+      duration: 0,
+      maxZoom: 3,
+    });
+  }, [tutorPoint, studentPoints]);
 
-  const tutorPoint = points.find((p) => p.isTutor);
-  const studentPoints = points.filter((p) => !p.isTutor);
-
-  const TUTOR_COLOR = "hsl(var(--preply-pink))";
-  const STUDENT_COLOR = "hsl(0, 0%, 10%)";
+  if (!tutorPoint || studentPoints.length === 0) return null;
 
   // Build great-circle-ish curved arcs between tutor and each student
   // (simple quadratic bezier through midpoint offset perpendicular).
@@ -170,12 +204,14 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
       </div>
       <div className="flex-1 min-h-[240px] rounded-lg overflow-hidden border border-border">
         <Map
+          ref={mapRef}
           initialViewState={{ longitude: 10, latitude: 20, zoom: 0.6 }}
           mapStyle={MAP_STYLE as never}
           attributionControl={false}
           dragRotate={false}
           pitchWithRotate={false}
           touchZoomRotate={false}
+          onLoad={fitToPoints}
           style={{ width: "100%", height: "100%" }}
         >
           <Source id="tutor-arcs" type="geojson" data={tutorArcs}>
@@ -202,7 +238,7 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
               }}
             />
           </Source>
-          {points.map((p) => {
+          {markers.map((p) => {
             const color = p.isTutor ? TUTOR_COLOR : STUDENT_COLOR;
             return (
               <Marker key={p.country} longitude={p.lng} latitude={p.lat} anchor="bottom">
