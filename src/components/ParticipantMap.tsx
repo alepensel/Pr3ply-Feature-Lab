@@ -215,7 +215,7 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
               }}
             />
           </Source>
-          {points.map((p) => {
+          {markers.map((p) => {
             const color = p.isTutor ? TUTOR_COLOR : STUDENT_COLOR;
             return (
               <Marker key={p.country} longitude={p.lng} latitude={p.lat} anchor="bottom">
