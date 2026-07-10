@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { MapPin } from "lucide-react";
 import Map, { Marker, Source, Layer } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
+import type { FeatureCollection, LineString } from "geojson";
 
 const COUNTRY_COORDS: Record<string, [number, number]> = {
   "Afghanistan": [33, 65], "Albania": [41, 20], "Algeria": [28, 3], "Andorra": [42.5, 1.5],
@@ -139,7 +140,7 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
     return coords;
   };
 
-  const tutorArcs: GeoJSON.FeatureCollection = {
+  const tutorArcs: FeatureCollection<LineString> = {
     type: "FeatureCollection",
     features: tutorPoint
       ? studentPoints.map((p) => ({
@@ -150,7 +151,7 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
       : [],
   };
 
-  const studentArcs: GeoJSON.FeatureCollection = {
+  const studentArcs: FeatureCollection<LineString> = {
     type: "FeatureCollection",
     features: studentPoints.flatMap((p, i) =>
       studentPoints.slice(i + 1).map((q) => ({
