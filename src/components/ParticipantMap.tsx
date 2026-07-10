@@ -171,7 +171,7 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
       <div className="flex-1 min-h-[240px] rounded-lg overflow-hidden border border-border">
         <Map
           initialViewState={{ longitude: 10, latitude: 20, zoom: 0.6 }}
-          mapStyle={MAP_STYLE as maplibregl.StyleSpecification}
+          mapStyle={MAP_STYLE as never}
           attributionControl={false}
           dragRotate={false}
           pitchWithRotate={false}
