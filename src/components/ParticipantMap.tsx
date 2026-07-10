@@ -94,26 +94,39 @@ const MAP_STYLE = {
 };
 
 const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapProps) => {
-  const points = useMemo(() => {
-    const allCountries = [tutorCountry, ...participantCountries.filter(Boolean)] as string[];
-    const unique = [...new Set(allCountries)];
-    return unique
-      .map((c) => {
-        const coords = COUNTRY_COORDS[c];
-        if (!coords) return null;
-        const [lat, lng] = coords;
-        return { country: c, lat, lng, isTutor: c === tutorCountry };
-      })
-      .filter(Boolean) as { country: string; lat: number; lng: number; isTutor: boolean }[];
+  const TUTOR_COLOR = "hsl(330, 100%, 60%)";
+  const STUDENT_COLOR = "hsl(0, 0%, 10%)";
+
+  const { tutorPoint, studentPoints, markers } = useMemo(() => {
+    const resolve = (c: string) => {
+      const coords = COUNTRY_COORDS[c];
+      if (!coords) return null;
+      return { country: c, lat: coords[0], lng: coords[1] };
+    };
+    const tp = resolve(tutorCountry);
+    const sp = participantCountries
+      .filter(Boolean)
+      .map((c) => resolve(c as string))
+      .filter(Boolean) as { country: string; lat: number; lng: number }[];
+
+    // Build unique markers by rounded coord so overlapping students still render once,
+    // but arcs use every student.
+    const seen = new Set<string>();
+    const mk: { country: string; lat: number; lng: number; isTutor: boolean }[] = [];
+    if (tp) {
+      seen.add(`${tp.lat.toFixed(1)},${tp.lng.toFixed(1)}`);
+      mk.push({ ...tp, isTutor: true });
+    }
+    for (const s of sp) {
+      const key = `${s.lat.toFixed(1)},${s.lng.toFixed(1)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      mk.push({ ...s, isTutor: false });
+    }
+    return { tutorPoint: tp, studentPoints: sp, markers: mk };
   }, [tutorCountry, participantCountries]);
 
-  if (points.length < 2) return null;
-
-  const tutorPoint = points.find((p) => p.isTutor);
-  const studentPoints = points.filter((p) => !p.isTutor);
-
-  const TUTOR_COLOR = "hsl(var(--preply-pink))";
-  const STUDENT_COLOR = "hsl(0, 0%, 10%)";
+  if (!tutorPoint || studentPoints.length === 0) return null;
 
   // Build great-circle-ish curved arcs between tutor and each student
   // (simple quadratic bezier through midpoint offset perpendicular).
