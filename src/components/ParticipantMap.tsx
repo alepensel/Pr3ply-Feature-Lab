@@ -149,7 +149,7 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
       if (p.lat > maxLat) maxLat = p.lat;
     }
     map.fitBounds([[minLng, minLat], [maxLng, maxLat]], {
-      padding: 60,
+      padding: { top: 80, bottom: 40, left: 60, right: 60 },
       duration: 0,
       maxZoom: 2.5,
     });
@@ -249,7 +249,13 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
             return (
               <Marker key={p.country} longitude={p.lng} latitude={p.lat} anchor="bottom">
                 <div className="flex flex-col items-center pointer-events-none">
-                  <svg width="18" height="24" viewBox="0 0 16 21" className="drop-shadow">
+                  <span
+                    className="mb-0.5 px-1 rounded bg-background/90 text-foreground font-medium whitespace-nowrap shadow-sm border border-border"
+                    style={{ fontSize: "9px" }}
+                  >
+                    {p.country}
+                  </span>
+                  <svg width="18" height="24" viewBox="0 0 16 21" className="drop-shadow block">
                     <path
                       d="M8,21 C8,21 1,13 1,8 A7,7 0 1,1 15,8 C15,13 8,21 8,21Z"
                       fill={color}
@@ -258,12 +264,6 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
                     />
                     <circle cx="8" cy="8" r="3" fill="white" />
                   </svg>
-                  <span
-                    className="mt-0.5 px-1 rounded bg-background/80 text-foreground font-medium whitespace-nowrap"
-                    style={{ fontSize: "9px" }}
-                  >
-                    {p.country}
-                  </span>
                 </div>
               </Marker>
             );
