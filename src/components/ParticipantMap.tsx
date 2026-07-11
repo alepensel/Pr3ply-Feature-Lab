@@ -1,10 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useCallback } from "react";
 import { MapPin } from "lucide-react";
 import Map, { Marker, Source, Layer } from "react-map-gl/maplibre";
 import type { MapRef } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, LineString } from "geojson";
-import { useRef, useCallback } from "react";
 
 const COUNTRY_COORDS: Record<string, [number, number]> = {
   "Afghanistan": [33, 65], "Albania": [41, 20], "Algeria": [28, 3], "Andorra": [42.5, 1.5],
@@ -95,6 +94,8 @@ const MAP_STYLE = {
   ],
 };
 
+const WORLD_BOUNDS: [[number, number], [number, number]] = [[-176, -58], [176, 76]];
+
 const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapProps) => {
   const mapRef = useRef<MapRef | null>(null);
   const TUTOR_COLOR = "hsl(330, 100%, 60%)";
@@ -129,31 +130,15 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
     return { tutorPoint: tp, studentPoints: sp, markers: mk };
   }, [tutorCountry, participantCountries]);
 
-  const fitToPoints = useCallback(() => {
+  const fitToWorld = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
-    const all = [tutorPoint, ...studentPoints].filter(Boolean) as { lat: number; lng: number }[];
-    if (all.length === 0) {
-      map.jumpTo({ center: [0, 20], zoom: 0.4 });
-      return;
-    }
-    if (all.length === 1) {
-      map.jumpTo({ center: [all[0].lng, all[0].lat], zoom: 1.5 });
-      return;
-    }
-    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
-    for (const p of all) {
-      if (p.lng < minLng) minLng = p.lng;
-      if (p.lng > maxLng) maxLng = p.lng;
-      if (p.lat < minLat) minLat = p.lat;
-      if (p.lat > maxLat) maxLat = p.lat;
-    }
-    map.fitBounds([[minLng, minLat], [maxLng, maxLat]], {
-      padding: { top: 80, bottom: 40, left: 60, right: 60 },
+    map.fitBounds(WORLD_BOUNDS, {
+      padding: { top: 42, bottom: 24, left: 18, right: 18 },
       duration: 0,
-      maxZoom: 2.5,
+      maxZoom: 1.15,
     });
-  }, [tutorPoint, studentPoints]);
+  }, []);
 
   // Build great-circle-ish curved arcs between tutor and each student
   // (simple quadratic bezier through midpoint offset perpendicular).
@@ -211,13 +196,15 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
       <div className="flex-1 min-h-[240px] rounded-lg overflow-hidden border border-border">
         <Map
           ref={mapRef}
-          initialViewState={{ longitude: 10, latitude: 20, zoom: 0.6 }}
+          initialViewState={{ longitude: 0, latitude: 12, zoom: 0.55 }}
           mapStyle={MAP_STYLE as never}
           attributionControl={false}
           dragRotate={false}
           pitchWithRotate={false}
           touchZoomRotate={false}
-          onLoad={fitToPoints}
+          renderWorldCopies={false}
+          onLoad={fitToWorld}
+          onResize={fitToWorld}
           style={{ width: "100%", height: "100%" }}
         >
           <Source id="tutor-arcs" type="geojson" data={tutorArcs}>
