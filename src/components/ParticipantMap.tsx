@@ -90,7 +90,7 @@ const MAP_STYLE = {
       id: "osm",
       type: "raster" as const,
       source: "osm",
-      paint: { "raster-saturation": -1, "raster-contrast": -0.1, "raster-brightness-min": 0.85 },
+      paint: { "raster-saturation": -1, "raster-contrast": 0.15, "raster-brightness-min": 0.6, "raster-brightness-max": 0.95 },
     },
   ],
 };
@@ -131,8 +131,16 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
 
   const fitToPoints = useCallback(() => {
     const map = mapRef.current;
-    if (!map || !tutorPoint) return;
-    const all = [tutorPoint, ...studentPoints];
+    if (!map) return;
+    const all = [tutorPoint, ...studentPoints].filter(Boolean) as { lat: number; lng: number }[];
+    if (all.length === 0) {
+      map.jumpTo({ center: [0, 20], zoom: 0.4 });
+      return;
+    }
+    if (all.length === 1) {
+      map.jumpTo({ center: [all[0].lng, all[0].lat], zoom: 1.5 });
+      return;
+    }
     let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
     for (const p of all) {
       if (p.lng < minLng) minLng = p.lng;
@@ -141,13 +149,11 @@ const ParticipantMap = ({ tutorCountry, participantCountries }: ParticipantMapPr
       if (p.lat > maxLat) maxLat = p.lat;
     }
     map.fitBounds([[minLng, minLat], [maxLng, maxLat]], {
-      padding: 40,
+      padding: 60,
       duration: 0,
-      maxZoom: 3,
+      maxZoom: 2.5,
     });
   }, [tutorPoint, studentPoints]);
-
-  if (!tutorPoint || studentPoints.length === 0) return null;
 
   // Build great-circle-ish curved arcs between tutor and each student
   // (simple quadratic bezier through midpoint offset perpendicular).
