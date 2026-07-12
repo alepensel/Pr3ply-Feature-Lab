@@ -1,10 +1,14 @@
 import { createRoot } from "react-dom/client";
+import {
+  SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_URL,
+} from "@/config/publicRuntime";
 import "./index.css";
 
 const root = createRoot(document.getElementById("root")!);
 const requiredConfig = [
-  ["VITE_SUPABASE_URL", import.meta.env.VITE_SUPABASE_URL],
-  ["VITE_SUPABASE_PUBLISHABLE_KEY", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY],
+  ["VITE_SUPABASE_URL", SUPABASE_URL],
+  ["VITE_SUPABASE_PUBLISHABLE_KEY", SUPABASE_PUBLISHABLE_KEY],
 ] as const;
 const missingConfig = requiredConfig
   .filter(([, value]) => !value)
