@@ -1,0 +1,4 @@
+project_id = "pr3ply-feature-lab"
+
+[functions.google-calendar-oauth-callback]
+verify_jwt = false
