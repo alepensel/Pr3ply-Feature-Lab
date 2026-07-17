@@ -18,7 +18,7 @@ This document describes what actually exists in the repo. No aspirational infras
    │
    ├── Agora Web SDK       ──►  Agora RTC (token issued by edge function)
    │
-   └── Web Speech API      ──►  local recognizer  ──►  upsert session_transcripts
+   └── Web Speech API      ──►  browser recognizer  ──►  upsert session_transcripts
 ```
 
 ## Frontend structure
@@ -85,7 +85,7 @@ All functions return generic error messages to the client; details go to server 
 2. Client calls `agora-token` with `session_id`; receives token + deterministic UID.
 3. Client joins Agora channel keyed by session id.
 4. Client subscribes to `room-state-{sessionId}` for tutor-controlled state.
-5. Web Speech recognizer runs locally; text upserted to `session_transcripts` every ~10s.
+5. The browser's Web Speech recognizer produces text, which is upserted to `session_transcripts` every ~10s. Audio handling depends on the browser implementation.
 6. Tutor "End session" → invokes `finalize-session` → writes `session_feedback` rows.
 
 ## Demo data

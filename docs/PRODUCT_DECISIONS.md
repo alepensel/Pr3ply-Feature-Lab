@@ -16,8 +16,8 @@ Decision log for the Pr3ply Shared Immersion prototype. Each entry captures the 
 
 - **Context:** first pass uploaded audio chunks to storage and transcribed via a multimodal AI call. Users reported "transcriptions are not real."
 - **Decision:** switch to the browser's Web Speech API; upsert text to `session_transcripts` every ~10s.
-- **Rationale:** no audio egress, zero incremental AI cost, and higher fidelity in supported browsers.
-- **Trade-off:** Web Speech is Chrome-family-first; other browsers get a degraded state.
+- **Rationale:** the application does not upload or store audio, the implementation has zero incremental application cost, and recognition quality is sufficient in supported browsers.
+- **Trade-off:** Web Speech is Chrome-family-first; other browsers get a degraded state, and some implementations may process recognition through a browser or platform service.
 - **Impact:** feedback quality improved substantially because transcripts stopped hallucinating.
 
 ### D3 — Lovable AI Gateway (Gemini) over BYO OpenAI
@@ -65,12 +65,12 @@ Decision log for the Pr3ply Shared Immersion prototype. Each entry captures the 
 - **Trade-off:** ties booking latency to session-row lock contention on hot sessions.
 - **Impact:** overbooking becomes impossible even from the API.
 
-### D9 — Public participant list on the session detail page
+### D9 — Participant list restricted to session members
 
-- **Context:** originally guarded by auth. Product wanted anonymous visitors to see "who's joining" to reduce first-booking hesitation.
-- **Decision:** expose the `session_participants` RPC to anonymous users; return only display fields (name, avatar, country, current_country).
-- **Trade-off:** learner names + countries are publicly visible on session detail pages.
-- **Impact:** documented in [`SECURITY_AND_PRIVACY.md`](SECURITY_AND_PRIVACY.md) as intentional. Learners agree by joining a public group session.
+- **Context:** an early version exposed participant display fields to anonymous visitors as social proof.
+- **Decision:** require authentication plus a confirmed booking or tutor role before `session_participants` returns display fields.
+- **Trade-off:** anonymous visitors no longer see who has joined a session.
+- **Impact:** participant names, avatars, and country fields are limited to the people taking part in that session.
 
 ### D10 — Single-tutor MVP scope
 

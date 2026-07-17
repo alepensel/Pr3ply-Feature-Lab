@@ -16,7 +16,7 @@ A tutor-moderated, small-group (2 learners per room) shared immersion product wi
 
 1. **AI role-play prompts** conditioned on level, scenario, and participant count.
 2. **Tutor-controlled turn-taking + speaking timer**, synced live across participants.
-3. **In-browser transcription** with no audio egress.
+3. **Browser-mediated transcription** without application-managed audio storage.
 4. **AI feedback report + rebook loop** so every session produces a tangible artifact and a next step.
 
 ## MVP

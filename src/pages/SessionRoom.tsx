@@ -122,7 +122,7 @@ const SessionRoom = () => {
                 </Badge>
                 <span className="text-sm font-medium">{session.scenario}</span>
                 {recording && (
-                  <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground" title="Your speech is transcribed locally in your browser to generate post-session feedback. No audio is uploaded.">
+                  <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground" title="Your browser transcribes speech to generate post-session feedback. Pr3ply stores the recognized text, not an audio recording.">
                     <Circle className="h-2 w-2 fill-destructive text-destructive animate-pulse" />
                     Live transcription on
                   </span>

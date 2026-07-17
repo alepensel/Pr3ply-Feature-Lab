@@ -11,7 +11,9 @@ interface Options {
 /**
  * Live-transcribes the local user's speech using the browser Web Speech API
  * and periodically upserts the accumulated transcript into session_transcripts.
- * No audio leaves the device; only the recognized text is stored.
+ * The application stores only recognized text. Audio handling is controlled by
+ * the browser's speech-recognition implementation and may involve a platform
+ * recognition service.
  */
 export const useSessionRecording = ({ sessionId, userId, enabled, language = "en-US" }: Options) => {
   const [recording, setRecording] = useState(false);
